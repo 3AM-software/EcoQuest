@@ -14,6 +14,8 @@
 		CA2ACB212CC6BF5F00C97111 /* EcoQuestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB202CC6BF5F00C97111 /* EcoQuestTests.swift */; };
 		CA2ACB2B2CC6BF5F00C97111 /* EcoQuestUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB2A2CC6BF5F00C97111 /* EcoQuestUITests.swift */; };
 		CA2ACB2D2CC6BF5F00C97111 /* EcoQuestUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB2C2CC6BF5F00C97111 /* EcoQuestUITestsLaunchTests.swift */; };
+		CA2ACB3D2CC6E1A600C97111 /* SVGKit in Frameworks */ = {isa = PBXBuildFile; productRef = CA2ACB3C2CC6E1A600C97111 /* SVGKit */; };
+		CA2ACB3F2CC6E1A600C97111 /* SVGKitSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CA2ACB3E2CC6E1A600C97111 /* SVGKitSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +53,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CA2ACB3F2CC6E1A600C97111 /* SVGKitSwift in Frameworks */,
+				CA2ACB3D2CC6E1A600C97111 /* SVGKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,6 +147,10 @@
 			dependencies = (
 			);
 			name = EcoQuest;
+			packageProductDependencies = (
+				CA2ACB3C2CC6E1A600C97111 /* SVGKit */,
+				CA2ACB3E2CC6E1A600C97111 /* SVGKitSwift */,
+			);
 			productName = EcoQuest;
 			productReference = CA2ACB0C2CC6BF5C00C97111 /* EcoQuest.app */;
 			productType = "com.apple.product-type.application";
@@ -215,6 +223,9 @@
 				Base,
 			);
 			mainGroup = CA2ACB032CC6BF5C00C97111;
+			packageReferences = (
+				CA2ACB3B2CC6E0AD00C97111 /* XCRemoteSwiftPackageReference "SVGKit" */,
+			);
 			productRefGroup = CA2ACB0D2CC6BF5C00C97111 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -588,6 +599,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CA2ACB3B2CC6E0AD00C97111 /* XCRemoteSwiftPackageReference "SVGKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SVGKit/SVGKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CA2ACB3C2CC6E1A600C97111 /* SVGKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA2ACB3B2CC6E0AD00C97111 /* XCRemoteSwiftPackageReference "SVGKit" */;
+			productName = SVGKit;
+		};
+		CA2ACB3E2CC6E1A600C97111 /* SVGKitSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA2ACB3B2CC6E0AD00C97111 /* XCRemoteSwiftPackageReference "SVGKit" */;
+			productName = SVGKitSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CA2ACB042CC6BF5C00C97111 /* Project object */;
 }
