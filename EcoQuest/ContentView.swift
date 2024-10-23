@@ -1,37 +1,163 @@
 import SwiftUI
-import SVGKit
+
+struct ThemeColors {
+    static let primary = Color(red: 22/255, green: 162/255, blue: 74/255)
+    static let primaryGradient = [
+        Color(red: 22/255, green: 162/255, blue: 74/255),
+        Color(red: 17/255, green: 185/255, blue: 129/255)
+    ]
+    
+    struct Background {
+        static func primary(_ isDark: Bool) -> Color {
+            isDark ? Color(red: 18/255, green: 18/255, blue: 18/255) : Color.white
+        }
+    }
+    
+    struct Content {
+        static func primary(_ isDark: Bool) -> Color {
+            isDark ? Color.white : Color.black
+        }
+        
+        static func border(_ isDark: Bool) -> Color {
+            isDark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color(red: 229/255, green: 229/255, blue: 229/255)
+        }
+    }
+    
+    struct Card {
+        static func background(_ isDark: Bool) -> Color {
+            isDark ? Color(red: 28/255, green: 28/255, blue: 30/255) : Color.white
+        }
+    }
+}
 
 struct ContentView: View {
-    // State to keep track of the selected tab
+    @State private var isLoading = true
+
+    var body: some View {
+        Group {
+            if isLoading {
+                LoadingScreen() // Your loading screen view
+            } else {
+                MainApp() // Your main app view
+            }
+        }
+        .onAppear {
+            // Simulate loading time
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                isLoading = false
+            }
+        }
+    }
+}
+
+struct MainApp: View {
     @State private var selectedTab: String = "Leaf"
+    @AppStorage("isDarkMode") private var isDarkMode = false
     
     var body: some View {
         ZStack {
-            Color(red: 249/255,green: 250/255,blue:251/255)
-                .ignoresSafeArea()
+            ThemeColors.Background.primary(isDarkMode)
+                            .ignoresSafeArea()
             VStack(spacing: 0) {
                 HeaderTitleView()
                 ScrollView {
                     VStack(alignment: .center) {
-                        ProfileInfoView()
-                            .padding(.top, -70)
-                        StreakBadge()
                         // Switch view based on selected tab
                         if selectedTab == "Leaf" {
-                            QuestsView()
-                                .padding(.bottom, 10)
-                            ImpactView()
+                            VStack(){
+                                ProfileInfoView()
+                                    .padding(.top, -70)
+                                    .transition(.opacity)
+                                StreakBadge(isDarkMode: isDarkMode)
+                                    .transition(.opacity)
+                                HStack {
+                                    Text("Daily Quests")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(isDarkMode ? .white : .black)
+                                    Spacer()
+                                    
+                                    Image(systemName: "timer")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundColor(.orange)
+                                        .frame(width:16, height:16)
+                                    Text("24 hours")
+                                        .font(.subheadline)
+                                        .foregroundColor(.orange)
+                                        .fontWeight(.medium)
+                                }
+                                .padding(.horizontal)
+                                NewQuestView(isDarkMode: isDarkMode)
+                                    .transition(.opacity)
+                                    .padding(.bottom, 10)
+                                HStack {
+                                    Text("Your Impact")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(isDarkMode ? .white : .black)
+                                    Spacer()
+                                    
+                                    Menu {
+                                        Button("This Month", action: {})
+                                        Button("Last Month", action: {})
+                                        Button("This Year", action: {})
+                                    } label: {
+                                        Text("This Month")
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                            .fontWeight(.medium)
+                                    }
+                                }
+                                .padding(.horizontal)
+                                ImpactView(isDarkMode: isDarkMode)
+                                    .transition(.opacity)
+                            }
                         } else if selectedTab == "Awards" {
+                            HStack {
+                                Text("Completed Quests")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(isDarkMode ? .white : .black)
+                                Spacer()
+                                
+                                Text("2 Completed Quests")
+                                    .foregroundColor(.green)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical)
                             AwardsView()
+                                .transition(.opacity)
                         } else if selectedTab == "Users" {
-                            UserProfile()
-                                .padding(.bottom, 10)
-                            UserOverview()
-                                .padding(.bottom, 10)
-                            ShareAppView()
+                            HStack {
+                                Text("Profile")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(isDarkMode ? .white : .black)
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.top)
+                            UserProfile(isDarkMode: isDarkMode)
+                                .transition(.opacity)
+                            HStack {
+                                Text("Overview")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(isDarkMode ? .white : .black)
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            UserOverview(isDarkMode: isDarkMode)
+                                .transition(.opacity)
                                 .padding(.bottom, 10)
                         }
                     }
+                    .animation(.easeInOut(duration: 0.3), value: selectedTab)
                 }
                 bottomNavBar
             }
@@ -51,7 +177,7 @@ struct ContentView: View {
                         .font(.caption)
                         .fontWeight(/*@START_MENU_TOKEN@*/.regular/*@END_MENU_TOKEN@*/)
                 }
-                .foregroundColor(selectedTab == icon ? .green : .gray)
+                .foregroundColor(selectedTab == icon ? Color(red:22/255,green: 163/255,blue: 74/255) : .gray)
                 .frame(maxWidth: .infinity)
                 .onTapGesture {
                     selectedTab = icon
@@ -60,7 +186,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 32)
         .padding(.vertical, 16)
-        .background(Color.white)
+        .background(Color.gray.opacity(0.1))
         .overlay(
             Rectangle()
                 .frame(height: 1)
@@ -94,164 +220,158 @@ struct AwardsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Completed Quests")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                
-                Spacer()
-                
-                Text("2 Completed Quests")
-                    .foregroundColor(.green)
-                    .font(.subheadline)
-            }
-            ForEach(completedQuests.filter { $0.isCompleted }, id: \.title) { quest in
-                QuestView(quest: quest)
-            }
+            
         }
         .padding()
         .background(Color.white)
         .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(red:229/255, green:229/255, blue:229/255), lineWidth:2))
         .padding(.horizontal)
-        .shadow(radius: 1)
     }
 }
 
-struct QuestsView: View {
+
+struct NewQuest: Identifiable {
+    let id = UUID() // Unique identifier
+    let title: String
+    let currActions: Int
+    let maxActions: Int
+    let icon: String
+    let iconColor: Color
+    var isCompleted: Bool { currActions >= maxActions } // Completion status
+    var points: Int { maxActions * 10 }
+    var completionTime: String?
+    var progress: Double { Double(currActions) / Double(maxActions) }
+}
+
+struct NewQuestView: View {
+    let isDarkMode: Bool
+    @Namespace private var animationNamespace
+    @State private var quests: [NewQuest]
+    
+    init(isDarkMode: Bool) {
+        self.isDarkMode = isDarkMode
+        _quests = State(initialValue: [
+            NewQuest(title: "Use a reusable water bottle", currActions: 1, maxActions: 1, icon: "drop.fill", iconColor: .blue),
+            NewQuest(title: "Recycle 3 items", currActions: 2, maxActions: 3, icon: "arrow.3.trianglepath", iconColor: .purple),
+            NewQuest(title: "Take public transport", currActions: 3, maxActions: 5, icon: "bus.fill", iconColor: .green),
+        ])
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Active Challenges")
-                    .font(.title3)
-                    .fontWeight(.bold)
+        VStack {
+            ForEach(quests.indices, id: \.self) { index in
+                // Make each quest a button
+                Button(action: {
+                    // Example action: Toggle completion status
+                    print("clicked")
+                }) {
+                    HStack(alignment: .center, spacing: 16) {
+                        Image(systemName: quests[index].icon)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 32, height: 32)
+                            .foregroundColor(quests[index].iconColor)
+                        
+                        VStack(alignment: .leading, spacing: 13) {
+                            HStack(alignment: .center) {
+                                Text(quests[index].title)
+                                    .font(.body)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(ThemeColors.Content.primary(isDarkMode))
+                                
+                                Spacer()
+                                Text("+\(quests[index].points)pts")
+                                    .foregroundColor(quests[index].iconColor)
+                                    .fontWeight(quests[index].isCompleted ? .bold : .semibold)
+                            }
+                            .padding(.top, 10)
+                            
+                            NewProgressBar(
+                                currActions: quests[index].currActions,
+                                maxActions: quests[index].maxActions,
+                                color: quests[index].iconColor
+                            )
+                            .padding(.bottom, 8)
+                        }
+                    }
+                    .padding(.top, 0)
+                    .padding(.bottom, 8)
+                    .contentShape(Rectangle()) // Expand the clickable area
+                }
+                .buttonStyle(PlainButtonStyle()) // Avoids default button styling
                 
-                Spacer()
-                
-                Text("1/2 Completed")
-                    .font(.subheadline)
-                    .foregroundColor(.green)
-            }
-            ForEach(dailyQuests, id: \.title) { quest in
-                QuestView(quest: quest)
+                // Divider between quests
+                if index < quests.count - 1 {
+                    Divider()
+                        .frame(height: 2)
+                        .overlay(ThemeColors.Content.border(isDarkMode))
+                        .padding(.horizontal, -32)
+                        .padding(.top, 8)
+                }
             }
         }
         .padding()
-        .background(Color.white)
+        .background(ThemeColors.Card.background(isDarkMode))
         .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
+        )
         .padding(.horizontal)
-        .shadow(radius: 1)
     }
 }
 
-struct QuestView: View {
-    let quest: Quest
-    @Namespace private var animationNamespace
-    var body: some View {
-            ZStack(alignment: .topTrailing) {
-                VStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: quest.icon)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 24, height: 24)
-                            .foregroundColor(quest.isCompleted ? .green : .blue)
-                        
-                        VStack(alignment: .leading) {
-                            Text(quest.title)
-                            if let completionTime = quest.completionTime {
-                                Text("Completed \(completionTime)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.green)
-                            } else {
-                                Text(String(format: "%.0f%% Completed", quest.progress * 100))
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
-                            }
-                            
-                        }
-                        
-                        Spacer()
-                        
-                        Text("+\(quest.points)pts")
-                            .fontWeight(quest.isCompleted ? .bold : .medium)
-                            .foregroundColor(quest.isCompleted ? .green : .blue)
-                    }
-                    
-                    if !quest.isCompleted {
-                        ProgressBar(progress: quest.progress)
-                    }
-                }
-                .padding()
-                .background(
-                    quest.isCompleted
-                    ? Color.green.opacity(0.1)
-                    : Color.blue.opacity(0.1)
-                )
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.blue.opacity(0.4), lineWidth: quest.isCompleted ? 0 : 1.5))
-                .matchedGeometryEffect(id: quest.id, in: animationNamespace)
-                
-                if quest.isCompleted {
-                    Image(systemName: "trophy.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 16, height: 16)
-                        .padding(4)
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .clipShape(Circle())
-                        .offset(x: 8, y: -8)
-                }
-            }
-            .animation(.easeInOut, value: quest.isCompleted)
-        }
-}
-
-struct ProgressBar: View {
-    let progress: Float
+struct NewProgressBar: View {
+    let currActions: Int
+    let maxActions: Int
+    let color: Color
+    
+    private var progress: Float {
+        return maxActions > 0 ? Float(currActions) / Float(maxActions) : 0
+    }
+    
+    private func textColor(in geometry: GeometryProxy) -> Color {
+        let progressWidth = CGFloat(progress) * geometry.size.width
+        let centerX = geometry.size.width / 2
+        return progressWidth > centerX ? .white : .gray
+    }
     
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
+                // Background Rectangle
                 Rectangle()
-                    .fill(Color.blue.opacity(0.2))
-                    .frame(height: 8)
-                    .cornerRadius(4)
-                
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(height: 16)
+                    .cornerRadius(8)
+                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+
+                // Progress Rectangle
                 Rectangle()
-                    .fill(Color.blue)
-                    .frame(width: CGFloat(progress) * geometry.size.width, height: 8)
-                    .cornerRadius(4)
+                    .fill(color)
+                    .frame(width: CGFloat(progress) * geometry.size.width, height: 16)
+                    .cornerRadius(8)
+                    .shadow(color: color.opacity(0.3), radius: 2, x: 0, y: -1)
+
+                // Text Overlay
+                Text("\(currActions)/\(maxActions)")
+                    .foregroundColor(textColor(in: geometry))
+                    .frame(maxWidth: .infinity)
+                    .multilineTextAlignment(.center)
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .animation(.easeInOut(duration: 0.2), value: progress)
             }
         }
-        .frame(height: 8)
+        .frame(height: 16)
     }
 }
 
-struct Quest: Identifiable {
-    let id = UUID()
-    let title: String
-    let points: Int
-    let icon: String
-    let progress: Float
-    let isCompleted: Bool
-    let completionTime: String?
-}
-
-let dailyQuests: [Quest] = [
-    Quest(title: "Use a reusable water bottle", points: 50, icon: "leaf", progress: 1.0, isCompleted: true, completionTime: "at 8:30 AM"),
-    Quest(title: "Recycle 3 items", points: 30, icon: "arrow.3.trianglepath", progress: 0.66, isCompleted: false, completionTime: nil),
-]
-
-let completedQuests: [Quest] = [
-    Quest(title: "Use a reusable water bottle", points: 50, icon: "leaf", progress: 1.0, isCompleted: true, completionTime: "on Oct. 21, 2024"),
-    Quest(title: "Recycle 3 items", points: 30, icon: "arrow.3.trianglepath", progress: 1, isCompleted: true, completionTime: "on Oct. 21, 2024"),
-]
-
 struct ImpactView: View {
+    let isDarkMode: Bool
     // MARK: - Properties
     let carbonSaved: Int = 2450
     let energySaved: Int = 384
@@ -269,7 +389,8 @@ struct ImpactView: View {
     @Namespace private var namespace
     
     // MARK: - Initialization
-    init() {
+    init(isDarkMode: Bool) {
+        self.isDarkMode = isDarkMode
         self.co2String = String(carbonSaved)
         self.energyString = String(energySaved)
         self.waterString = String(waterSaved)
@@ -281,6 +402,9 @@ struct ImpactView: View {
         ImpactCardData(
             gradient: [Color(red: 16/255, green: 185/255, blue: 129/255),
                       Color(red: 5/255, green: 150/255, blue: 105/255)],
+            color: Color(red: 236/255, green: 253/255, blue: 245/255),
+            outline: Color(red:167/255, green:243/255, blue:208/255),
+            text: Color(red:4/255 , green:120/255, blue:87/255),
             icon: "leaf.fill",
             title: "CO₂ Saved",
             detail: """
@@ -295,6 +419,9 @@ struct ImpactView: View {
         ImpactCardData(
             gradient: [Color(red: 245/255, green: 158/255, blue: 11/255),
                       Color(red: 234/255, green: 138/255, blue: 0/255)],
+            color: Color(red:254/255, green:252/255, blue:232/255),
+            outline: Color(red:254/255, green:240/255, blue:138/255),
+            text: Color(red:161/255 , green:98/255, blue:7/255),
             icon: "bolt.fill",
             title: "Energy Saved",
             detail: """
@@ -309,6 +436,9 @@ struct ImpactView: View {
         ImpactCardData(
             gradient: [Color(red: 59/255, green: 130/255, blue: 246/255),
                       Color(red: 37/255, green: 99/255, blue: 235/255)],
+            color: Color(red:239/255,green:246/255,blue:255/255),
+            outline: Color(red:191/255, green:219/255,blue: 254/255),
+            text: Color(red:29/255, green:78/255,blue: 216/255),
             icon: "drop.fill",
             title: "Water Saved",
             detail: """
@@ -323,6 +453,9 @@ struct ImpactView: View {
         ImpactCardData(
             gradient: [Color(red: 139/255, green: 92/255, blue: 246/255),
                       Color(red: 124/255, green: 58/255, blue: 237/255)],
+            color: Color(red:250/255, green:245/255,blue: 255/255),
+            outline: Color(red:233/255, green:213/255,blue: 255/255),
+            text: Color(red:126/255, green:34/255,blue: 206/255),
             icon: "arrow.3.trianglepath",
             title: "Waste Reduced",
             detail: """
@@ -339,23 +472,6 @@ struct ImpactView: View {
     var body: some View {
         ZStack {
             VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Text("Your Impact")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                    Spacer()
-                    
-                    Menu {
-                        Button("This Month", action: {})
-                        Button("Last Month", action: {})
-                        Button("This Year", action: {})
-                    } label: {
-                        Text("This Month")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                }
-                
                 LazyVGrid(columns: [
                     GridItem(.flexible(), spacing: 16),
                     GridItem(.flexible(), spacing: 16)
@@ -376,10 +492,13 @@ struct ImpactView: View {
                 }
             }
             .padding()
-            .background(Color.white)
+            .background(ThemeColors.Card.background(isDarkMode))
             .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
+            )
             .padding(.horizontal)
-            .shadow(radius: 1)
             
             // Full screen expanded card
             if let selected = selectedCard {
@@ -428,6 +547,9 @@ struct ImpactView: View {
 // MARK: - Supporting Types
 struct ImpactCardData {
     let gradient: [Color]
+    let color: Color
+    let outline: Color
+    let text: Color
     let icon: String
     let title: String
     let detail: String
@@ -473,8 +595,51 @@ struct CompactCardView: View {
             .padding(.leading, -15)
         }
         .frame(height: 140)
-        .opacity(show ? 1 : 0) // Always show compact cards
+        .opacity(show ? 1 : 0)
     }
+}
+
+struct OpaqueCompactCardView: View {
+    let card: ImpactCardData
+        let value: String
+        let unit: String
+        let show: Bool
+
+        var body: some View {
+            ZStack {
+                Color(card.color)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(card.outline, lineWidth: 1.5))
+                VStack(alignment: .leading, spacing: 4) {
+                    Image(systemName: card.icon)
+                        .font(.title2)
+                        .foregroundColor(card.text)
+
+                    HStack {
+                        Text(value)
+                            .font(.system(size: 28))
+                            .tracking(-0.5)
+                            .fontWeight(.heavy)
+                            .foregroundColor(card.text)
+                        Text(unit)
+                            .font(.system(size: 16))
+                            .fontWeight(.medium)
+                            .foregroundColor(card.text)
+                    }
+                    .foregroundColor(.white)
+
+                    Text(card.title)
+                        .font(.subheadline)
+                        .foregroundColor(card.text)
+                        .opacity(0.8)
+                }
+                .padding(.leading, -15)
+            }
+            .frame(height: 140)
+            .opacity(show ? 1 : 0)
+        }
 }
 
 // MARK: - Expanded Card View
@@ -534,14 +699,6 @@ struct ExpandedCardView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.bottom)
         .transition(.move(edge: .bottom))
-        .cornerRadius(16)
-    }
-}
-
-    // MARK: - Preview Provider
-struct ImpactView_Previews: PreviewProvider {
-    static var previews: some View {
-        ImpactView()
     }
 }
 
@@ -593,7 +750,7 @@ struct ProfileInfoView: View {
                 endPoint: .trailing
             )
             .frame(height: 250)
-            .cornerRadius(25)
+            
             VStack(spacing: 16) {
                 VStack(spacing: 12) {
                     HStack {
@@ -669,18 +826,25 @@ struct LevelProgressBar: View {
     }
 }
 
-struct StreakBadge: View{
+struct StreakBadge: View {
+    let isDarkMode: Bool
+    
     var body: some View {
         HStack(spacing: 8) {
             Text("🔥")
             Text("15 Day Streak!")
                 .fontWeight(.bold)
+                .foregroundColor(ThemeColors.Content.primary(isDarkMode))
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 8)
-        .background(Color.white)
+        .background(ThemeColors.Card.background(isDarkMode))
         .cornerRadius(20)
-        .shadow(radius: 4)
+        .shadow(color: isDarkMode ? .clear : .black.opacity(0.1), radius: 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 1)
+        )
         .offset(y: -20)
     }
 }
@@ -688,16 +852,14 @@ struct StreakBadge: View{
 struct UserOverview: View {
     var totalPoints: Int = 1200 // Example value
     var streak: Int = 5 // Example value
+    let isDarkMode: Bool
+    
+    init(isDarkMode: Bool){
+        self.isDarkMode = isDarkMode
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Overview")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                
-                Spacer()
-            }
             HStack {
                 // Rectangle for Total Points
                 VStack(alignment: .center) {
@@ -711,125 +873,183 @@ struct UserOverview: View {
                 .padding(4)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.gray.opacity(0.4), lineWidth:1.5))
+                        .stroke(Color(red:229/255, green:229/255, blue:229/255), lineWidth:2))
+                Spacer()
             }
         }
         .padding()
-        .background(Color.white)
+        .background(ThemeColors.Card.background(isDarkMode))
         .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 1)
+        )
         .padding(.horizontal)
-        .shadow(radius: 1)
     }
 }
 
 struct UserProfile: View {
     @State private var showSettings = false
+    let isDarkMode: Bool
+    
+    init(isDarkMode: Bool) {
+        self.isDarkMode = isDarkMode
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Arco23")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                
-                Spacer()
-                
-                Button(action: {
-                    showSettings.toggle() // Show settings when the gear icon is tapped
-                }) {
-                    HStack {
-                        Image(systemName: "gearshape")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 24, height: 24)
+        VStack(alignment: .leading){
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Arco23")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(isDarkMode ? .white : .black)
+                    Spacer()
+                    
+                    Button(action: {
+                        showSettings.toggle() // Show settings when the gear icon is tapped
+                    }) {
+                        HStack {
+                            Image(systemName: "gearshape")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
+                        }
+                    }
+                    .sheet(isPresented: $showSettings) {
+                        SettingsView()
+                            .presentationDetents([.medium, .fraction(0.75),.height(700)])
                     }
                 }
-                .sheet(isPresented: $showSettings) {
-                    SettingsView()
-                        .presentationDetents([.medium, .fraction(0.75),.height(700)])
+                
+                HStack {
+                    Text("@Arco23")
+                        .font(.body)
+                        .foregroundColor(.gray)
+                    Spacer()
+                    Text("Joined October 2024")
+                        .font(.body)
+                        .foregroundColor(.gray)
                 }
             }
-            
-            HStack {
-                Text("@Arco23")
-                    .font(.body)
-                    .foregroundColor(.gray)
-                Spacer()
-                Text("Joined October 2024")
-                    .font(.body)
-                    .foregroundColor(.gray)
-            }
+            .padding()
+            .background(ThemeColors.Card.background(isDarkMode))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 1)
+            )
+            .padding(.horizontal)
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .padding(.horizontal)
-        .shadow(radius: 1)
     }
 }
 
 struct SettingsView: View {
-    @State private var isDarkMode = false
+    @AppStorage("isDarkMode") private var isDarkMode = false
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationView {
             Form {
-                Toggle("Dark Mode", isOn: $isDarkMode)
-                // Additional settings options can be added here
+                Section(header: Text("Appearance")) {
+                    Toggle(isOn: $isDarkMode) {
+                        HStack {
+                            Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
+                                .foregroundColor(isDarkMode ? .blue : .yellow)
+                            Text(isDarkMode ? "Dark Mode" : "Light Mode")
+                        }
+                    }
+                }
             }
             .navigationTitle("Settings")
-            .navigationBarItems(trailing: Button("Done") {
-                dismissSettingsView()
-            })
-        }
-    }
-    
-    private func dismissSettingsView() {
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            windowScene.windows.first?.rootViewController?.dismiss(animated: true, completion: nil)
+            .navigationBarItems(trailing: Button("Done") { dismiss() })
         }
     }
 }
 
-struct ShareAppView: View {
+struct LoadingScreen: View {
+    @State private var progress: CGFloat = 0
+    @State private var isAnimating = false
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Share This App")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                
-                Spacer()
-                
-                // Share icon
-                Button(action: {
-                    // Action to share the app goes here
-                    shareApp()
-                }) {
-                    Image(systemName: "square.and.arrow.up")
+        ZStack {
+            // Background gradient
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(red: 22/255, green: 163/255, blue: 74/255),
+                    Color(red: 21/255, green: 128/255, blue: 61/255)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            VStack {
+                // Logo Animation
+                VStack(spacing: -10) {
+                    Image(systemName: "leaf.fill")
                         .resizable()
-                        .foregroundColor(.blue)
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
+                        .foregroundColor(.white)
+                        .frame(width: 80, height: 80)
+                        .scaleEffect(isAnimating ? 1.1 : 1.0)
+                        .animation(Animation.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: isAnimating)
+                        .onAppear {
+                            self.isAnimating = true
+                        }
+                }
+                .padding(.bottom, 20)
+
+                Text("EcoQuest")
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.bottom, 20)
+
+                // Eco Tip Card
+                VStack {
+                    Text("🌿 Did You Know?")
+                        .font(.headline)
+                        .foregroundColor(.white)
+
+                    Text("Bamboo grows up to 35 inches per day, making it one of the most sustainable building materials on Earth. Using bamboo products helps reduce deforestation!")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.9))
+                        .multilineTextAlignment(.center)
+                        .padding(10)
+                }
+                .padding()
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(12)
+                .padding(.bottom, 20)
+
+                // Loading Bar
+                VStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.white.opacity(0.2))
+                        .frame(width: 200, height: 10)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color(red:134/255,green:239/255,blue:172/255))
+                        .frame(width: progress * 200 / 100, height: 10)
+                        .animation(.linear(duration: 0.5), value: progress)
+                        .padding(.top, -18)
+                }
+                .padding(.bottom, 10)
+
+                Text("Loading your eco journey...")
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+            }
+            .padding()
+        }
+        .onAppear {
+            // Simulate loading progress
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+                if self.progress < 100 {
+                    self.progress += 20
+                } else {
+                    timer.invalidate()
                 }
             }
-            Text("Help us spread the word! Share this app with your friends and family.")
-                .font(.body)
-                .foregroundColor(.gray)
-            
-            Spacer()
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .padding(.horizontal)
-        .shadow(radius: 1)
-    }
-    
-    func shareApp() {
-        // Implement sharing functionality here
-        // For example, using UIActivityViewController in UIKit
-        print("Sharing the app...")
     }
 }
 
