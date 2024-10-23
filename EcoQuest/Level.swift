@@ -23,9 +23,7 @@ struct HeaderTitleView: View {
                     .foregroundColor(.white)
                 Spacer()
                 Image(systemName: "shield")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 28, height: 28)
+                    .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.white)
             }
             .padding([.leading, .trailing], 20.0)
@@ -50,7 +48,7 @@ struct ProfileInfoView: View {
                 startPoint: .leading,
                 endPoint: .trailing
             )
-            .frame(height: 250)
+            .frame(height: 550)
             
             VStack(spacing: 16) {
                 VStack(spacing: 12) {
@@ -105,7 +103,7 @@ struct ProfileInfoView: View {
                 .background(Color.white.opacity(0.2))
                 .cornerRadius(16)
             }
-            .padding(.top, 40)
+            .padding(.top, 340)
             .padding([.leading,.trailing])
         }
         .foregroundColor(.white)

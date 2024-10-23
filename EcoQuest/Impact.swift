@@ -152,6 +152,7 @@ struct ImpactView: View {
         .onAppear {
             showCards = true // Show cards immediately without animation
         }
+        .padding(.bottom, selectedCard != nil ? 0 : 16)
     }
     
     private func getValue(for index: Int) -> String {

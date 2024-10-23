@@ -9,108 +9,7 @@ typealias UIImagePickerController = MockImagePicker
 typealias UIImagePickerControllerDelegate = MockImagePickerDelegate
 #endif
 
-func encodeImage(image: UIImage) -> String {
-    // Convert UIImage to JPEG data
-    if let imageData = image.jpegData(compressionQuality: 1.0) { // Change to pngData() if needed
-        return imageData.base64EncodedString()
-    }
-    return "";
-}
 
-// Function to send image and prompt to OpenAI
-func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-    let apiKey = "API_KEY"
-    let url = URL(string: "https://api.openai.com/v1/chat/completions")!
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    
-    // Create the request body
-    // Prepare individual components to simplify the main dictionary construction
-    let modelKey = "model"
-    let modelValue = "gpt-4o-mini"
-
-    let roleKey = "role"
-    let roleValue = "user"
-
-    let contentKey = "content"
-    let temperatureKey = "temperature"
-    let temperatureValue: Double = 1
-    let maxTokensKey = "max_tokens"
-    let maxTokensValue = 4
-
-    // Constructing the content array
-    let textContent: [String: Any] = [
-        "type": "text",
-        "text": prompt // Use the prompt parameter
-    ]
-
-    let imageContent: [String: Any] = [
-        "type": "image_url",
-        "image_url": [
-            "url": "data:image/jpeg;base64,\(base64Image)"
-        ]
-    ]
-
-    let contentArray: [[String: Any]] = [textContent, imageContent]
-
-    // Constructing the messages array
-    let messages: [[String: Any]] = [
-        [
-            roleKey: roleValue,
-            contentKey: contentArray
-        ]
-    ]
-
-    // Constructing the final body dictionary
-    let body: [String: Any] = [
-        modelKey: modelValue,
-        "messages": messages,
-        temperatureKey: temperatureValue,
-        maxTokensKey: maxTokensValue
-    ]
-    
-    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-
-    // Create a semaphore to wait for the response
-    let semaphore = DispatchSemaphore(value: 0)
-    var result: String = "Failed to get a response" // Default value in case of failure
-    
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error = error {
-            print("Error: \(error.localizedDescription)")
-            semaphore.signal()
-            return
-        }
-        
-        guard let data = data else {
-            print("No data received.")
-            semaphore.signal()
-            return
-        }
-        
-        // Handle the response
-        if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-           let choices = json["choices"] as? [[String: Any]],
-           let message = choices.first?["message"] as? [String: Any],
-           let content = message["content"] as? String {
-            result = content // Store the response in the result variable
-        } else {
-            print("Failed to parse JSON.")
-        }
-        
-        semaphore.signal() // Signal that the request is complete
-    }
-    
-    task.resume()
-    
-    // Wait until the task signals that it's done
-    semaphore.wait()
-    
-    return result // Return the result
-}
 
 struct ThemeColors {
     static let primary = Color(red: 22/255, green: 162/255, blue: 74/255)
@@ -182,7 +81,8 @@ struct MainApp: View {
                         if selectedTab == "Leaf" {
                             VStack {
                                 ProfileInfoView()
-                                    .padding(.top, -70)
+                                    .edgesIgnoringSafeArea(.top)
+                                    .padding(.top, -370)
                                     .transition(.opacity)
                                 StreakBadge(isDarkMode: isDarkMode)
                                     .transition(.opacity)
@@ -193,11 +93,10 @@ struct MainApp: View {
                                         .fontWeight(.bold)
                                         .foregroundColor(isDarkMode ? .white : .black)
                                     Spacer()
-                                    Image(systemName: "timer")
-                                        .resizable()
-                                        .scaledToFit()
+                                    Image(systemName: "clock")
+                                        .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.orange)
-                                        .frame(width: 16, height: 16)
+                                        
                                     Text("24 hours")
                                         .font(.subheadline)
                                         .foregroundColor(.orange)
@@ -231,7 +130,7 @@ struct MainApp: View {
                                 
                                 ImpactView(isDarkMode: isDarkMode)
                                     .transition(.opacity)
-                                    .padding(.bottom)
+                                    
                             }
                         } else if selectedTab == "Awards" {
                             HStack {

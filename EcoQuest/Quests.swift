@@ -1,5 +1,107 @@
 import SwiftUI
 
+func encodeImage(image: UIImage) -> String {
+    // Convert UIImage to JPEG data
+    if let imageData = image.jpegData(compressionQuality: 1.0) { // Change to pngData() if needed
+        return imageData.base64EncodedString()
+    }
+    return "";
+}
+
+// Function to send image and prompt to OpenAI
+func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
+    let apiKey = "API_KEY"
+    let url = URL(string: "https://api.openai.com/v1/chat/completions")!
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    
+    // Create the request body
+    // Prepare individual components to simplify the main dictionary construction
+    let modelKey = "model"
+    let modelValue = "gpt-4o-mini"
+
+    let roleKey = "role"
+    let roleValue = "user"
+
+    let contentKey = "content"
+    let temperatureKey = "temperature"
+    let temperatureValue: Double = 1
+    let maxTokensKey = "max_tokens"
+    let maxTokensValue = 4
+
+    // Constructing the content array
+    let textContent: [String: Any] = [
+        "type": "text",
+        "text": prompt // Use the prompt parameter
+    ]
+
+    let imageContent: [String: Any] = [
+        "type": "image_url",
+        "image_url": [
+            "url": "data:image/jpeg;base64,\(base64Image)"
+        ]
+    ]
+
+    let contentArray: [[String: Any]] = [textContent, imageContent]
+
+    // Constructing the messages array
+    let messages: [[String: Any]] = [
+        [
+            roleKey: roleValue,
+            contentKey: contentArray
+        ]
+    ]
+
+    // Constructing the final body dictionary
+    let body: [String: Any] = [
+        modelKey: modelValue,
+        "messages": messages,
+        temperatureKey: temperatureValue,
+        maxTokensKey: maxTokensValue
+    ]
+    
+    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+    // Create a semaphore to wait for the response
+    let semaphore = DispatchSemaphore(value: 0)
+    var result: String = "Failed to get a response" // Default value in case of failure
+    
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+            print("Error: \(error.localizedDescription)")
+            semaphore.signal()
+            return
+        }
+        
+        guard let data = data else {
+            print("No data received.")
+            semaphore.signal()
+            return
+        }
+        print("here")
+        // Handle the response
+        if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+           let choices = json["choices"] as? [[String: Any]],
+           let message = choices.first?["message"] as? [String: Any],
+           let content = message["content"] as? String {
+            result = content // Store the response in the result variable
+        } else {
+            print("Failed to parse JSON.")
+        }
+        
+        semaphore.signal() // Signal that the request is complete
+    }
+    
+    task.resume()
+    
+    // Wait until the task signals that it's done
+    semaphore.wait()
+    return result // Return the result
+}
+
 struct AwardsView: View {
     
     var body: some View {
@@ -19,7 +121,7 @@ struct AwardsView: View {
 struct NewQuest: Identifiable {
     let id = UUID() // Unique identifier
     let title: String
-    let currActions: Int
+    var currActions: Int
     let maxActions: Int
     let icon: String
     let iconColor: Color
@@ -39,6 +141,7 @@ struct NewQuestView: View {
     @State private var isCameraPresented: Bool = false
     @State private var selectedQuest: NewQuest?
     @State private var selectedImage: UIImage?
+    @State private var processingImage: Bool = false
 
     init(isDarkMode: Bool) {
         self.isDarkMode = isDarkMode
@@ -50,37 +153,73 @@ struct NewQuestView: View {
     }
 
     var body: some View {
-        VStack {
-            ForEach(quests.indices, id: \.self) { index in
-                questButton(for: index)
-                
-                // Divider between quests
-                if index < quests.count - 1 {
-                    questDivider()
+        ZStack {
+            VStack {
+                ForEach(quests.indices, id: \.self) { index in
+                    questButton(for: index)
+                    
+                    // Divider between quests
+                    if index < quests.count - 1 {
+                        questDivider()
+                    }
                 }
             }
-        }
-        .padding()
-        .background(ThemeColors.Card.background(isDarkMode))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
-        )
-        .padding(.horizontal)
-        .fullScreenCover(isPresented: $isCameraPresented) {
-            CameraView(selectedImage: $selectedImage) // Pass binding to CameraView
-        }
-        .onChange(of: selectedImage) {
-            if let image = selectedImage {
-                let base64Image = encodeImage(image: image)
-                
-                // Assuming you have a way to select the appropriate quest
-                if let selectedQuest = selectedQuest {
-                    print(selectedQuest.completionPrompt ?? "") // Print the completion prompt
-                    // Here you can call your API or any other function
-                    // let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt)
+            .padding()
+            .background(ThemeColors.Card.background(isDarkMode))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
+            )
+            .padding(.horizontal)
+            .fullScreenCover(isPresented: $isCameraPresented) {
+                CameraView(selectedImage: $selectedImage) // Pass binding to CameraView
+            }
+            .onChange(of: selectedImage) {
+                if let image = selectedImage {
+                    let base64Image = encodeImage(image: image)
+                    processingImage = true
+                    isCameraPresented = false
+                    if let selectedQuest = selectedQuest {
+                        print(selectedQuest.completionPrompt ?? "")
+                        
+                        // Call sendImageToOpenAI asynchronously
+                        DispatchQueue.global(qos: .userInitiated).async {
+                            let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt ?? "")
+                            
+                            // Ensure any UI updates are done on the main thread
+                            DispatchQueue.main.async {
+                                print(completed)
+                                processingImage = false
+                                if (completed.lowercased().contains("yes")){
+                                    if let index = quests.firstIndex(where: { $0.id == selectedQuest.id }) {
+                                        if completed.lowercased().contains("yes") {
+                                            quests[index].currActions += 1 // Update the actual quest's currActions
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            }
+            
+            // Loading Screen ZStack
+            if processingImage {
+                Color.black.opacity(0.7) // Semi-transparent background
+                    .ignoresSafeArea()
+                
+                VStack {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white)) // White progress indicator
+                        .padding()
+                    
+                    Text("Processing Quest")
+                        .foregroundColor(.white) // Text color to match dark mode
+                        .font(.headline)
+                        .padding(.top, 8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity) // Fill the screen
             }
         }
     }
