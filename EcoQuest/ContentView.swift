@@ -1,4 +1,115 @@
 import SwiftUI
+import Foundation
+import UIKit
+
+#if targetEnvironment(simulator)
+import MockImagePicker
+typealias UIImagePickerController = MockImagePicker
+typealias UIImagePickerControllerDelegate = MockImagePickerDelegate
+#endif
+
+func encodeImage(image: UIImage) -> String {
+    // Convert UIImage to JPEG data
+    if let imageData = image.jpegData(compressionQuality: 1.0) { // Change to pngData() if needed
+        return imageData.base64EncodedString()
+    }
+    return "";
+}
+
+// Function to send image and prompt to OpenAI
+func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
+    let apiKey = "API_KEY"  // Replace with your actual API key
+    let url = URL(string: "https://api.openai.com/v1/chat/completions")!
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    
+    // Create the request body
+    // Prepare individual components to simplify the main dictionary construction
+    let modelKey = "model"
+    let modelValue = "gpt-4o-mini"
+
+    let roleKey = "role"
+    let roleValue = "user"
+
+    let contentKey = "content"
+    let temperatureKey = "temperature"
+    let temperatureValue: Double = 1
+    let maxTokensKey = "max_tokens"
+    let maxTokensValue = 4
+
+    // Constructing the content array
+    let textContent: [String: Any] = [
+        "type": "text",
+        "text": prompt // Use the prompt parameter
+    ]
+
+    let imageContent: [String: Any] = [
+        "type": "image_url",
+        "image_url": [
+            "url": "data:image/jpeg;base64,\(base64Image)"
+        ]
+    ]
+
+    let contentArray: [[String: Any]] = [textContent, imageContent]
+
+    // Constructing the messages array
+    let messages: [[String: Any]] = [
+        [
+            roleKey: roleValue,
+            contentKey: contentArray
+        ]
+    ]
+
+    // Constructing the final body dictionary
+    let body: [String: Any] = [
+        modelKey: modelValue,
+        "messages": messages,
+        temperatureKey: temperatureValue,
+        maxTokensKey: maxTokensValue
+    ]
+    
+    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+    // Create a semaphore to wait for the response
+    let semaphore = DispatchSemaphore(value: 0)
+    var result: String = "Failed to get a response" // Default value in case of failure
+    
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+            print("Error: \(error.localizedDescription)")
+            semaphore.signal()
+            return
+        }
+        
+        guard let data = data else {
+            print("No data received.")
+            semaphore.signal()
+            return
+        }
+        
+        // Handle the response
+        if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+           let choices = json["choices"] as? [[String: Any]],
+           let message = choices.first?["message"] as? [String: Any],
+           let content = message["content"] as? String {
+            result = content // Store the response in the result variable
+        } else {
+            print("Failed to parse JSON.")
+        }
+        
+        semaphore.signal() // Signal that the request is complete
+    }
+    
+    task.resume()
+    
+    // Wait until the task signals that it's done
+    semaphore.wait()
+    
+    return result // Return the result
+}
 
 struct ThemeColors {
     static let primary = Color(red: 22/255, green: 162/255, blue: 74/255)
@@ -240,6 +351,7 @@ struct NewQuest: Identifiable {
     let maxActions: Int
     let icon: String
     let iconColor: Color
+    let completionPrompt: String
     var isCompleted: Bool { currActions >= maxActions } // Completion status
     var points: Int { maxActions * 10 }
     var completionTime: String?
@@ -250,23 +362,27 @@ struct NewQuestView: View {
     let isDarkMode: Bool
     @Namespace private var animationNamespace
     @State private var quests: [NewQuest]
-    
+    @State private var isCameraPresented: Bool = false
+    @State private var selectedQuest: NewQuest?
+    @State private var selectedImage: UIImage? // Store the selected image
+
     init(isDarkMode: Bool) {
         self.isDarkMode = isDarkMode
         _quests = State(initialValue: [
-            NewQuest(title: "Use a reusable water bottle", currActions: 1, maxActions: 1, icon: "drop.fill", iconColor: .blue),
-            NewQuest(title: "Recycle 3 items", currActions: 2, maxActions: 3, icon: "arrow.3.trianglepath", iconColor: .purple),
-            NewQuest(title: "Take public transport", currActions: 3, maxActions: 5, icon: "bus.fill", iconColor: .green),
+            NewQuest(title: "Use a reusable water bottle", currActions: 1, maxActions: 1, icon: "drop.fill", iconColor: .blue, completionPrompt: "Does the image contain a reusable water bottle? Please answer using just 'yes' or 'no'."),
+            NewQuest(title: "Recycle 3 items", currActions: 2, maxActions: 3, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image contain a recyclable item? Please answer using just 'yes' or 'no'."),
+            NewQuest(title: "Take public transport", currActions: 3, maxActions: 5, icon: "bus.fill", iconColor: .green, completionPrompt: "Does the image contain a form of public transport? Please answer using just 'yes' or 'no'"),
         ])
     }
-    
+
     var body: some View {
         VStack {
             ForEach(quests.indices, id: \.self) { index in
-                // Make each quest a button
+                let currentQuest = quests[index]
+
                 Button(action: {
-                    // Example action: Toggle completion status
-                    print("clicked")
+                    isCameraPresented = true
+                    selectedQuest = currentQuest
                 }) {
                     HStack(alignment: .center, spacing: 16) {
                         Image(systemName: quests[index].icon)
@@ -274,21 +390,21 @@ struct NewQuestView: View {
                             .scaledToFit()
                             .frame(width: 32, height: 32)
                             .foregroundColor(quests[index].iconColor)
-                        
+
                         VStack(alignment: .leading, spacing: 13) {
                             HStack(alignment: .center) {
                                 Text(quests[index].title)
                                     .font(.body)
                                     .fontWeight(.semibold)
                                     .foregroundColor(ThemeColors.Content.primary(isDarkMode))
-                                
+
                                 Spacer()
                                 Text("+\(quests[index].points)pts")
                                     .foregroundColor(quests[index].iconColor)
                                     .fontWeight(quests[index].isCompleted ? .bold : .semibold)
                             }
                             .padding(.top, 10)
-                            
+
                             NewProgressBar(
                                 currActions: quests[index].currActions,
                                 maxActions: quests[index].maxActions,
@@ -303,7 +419,6 @@ struct NewQuestView: View {
                 }
                 .buttonStyle(PlainButtonStyle()) // Avoids default button styling
                 
-                // Divider between quests
                 if index < quests.count - 1 {
                     Divider()
                         .frame(height: 2)
@@ -321,7 +436,63 @@ struct NewQuestView: View {
                 .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
         )
         .padding(.horizontal)
+        .sheet(isPresented: $isCameraPresented) {
+                    CameraView(selectedImage: $selectedImage) // Pass binding to CameraView
+                }
+        .onChange(of: selectedImage) {
+            if let image = selectedImage {
+                let base64Image = encodeImage(image: image)
+                
+                // Assuming you have a way to select the appropriate quest
+                if let selectedQuest = selectedQuest {
+                    print(selectedQuest.completionPrompt) // Print the completion prompt
+                    // Here you can call your API or any other function
+                    // let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt)
+                }
+            }
+        }
     }
+}
+// The CameraView using UIImagePickerController
+struct CameraView: UIViewControllerRepresentable {
+    @Binding var selectedImage: UIImage?
+
+    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        var parent: CameraView
+
+        init(parent: CameraView) {
+            self.parent = parent
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            // Capture the selected image
+            if let image = info[.originalImage] as? UIImage {
+                self.parent.selectedImage = image  // Assign the captured image to the binding
+            }
+            picker.dismiss(animated: true)  // Dismiss the camera UI
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            picker.dismiss(animated: true)  // Dismiss if cancelled
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(parent: self)
+    }
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        picker.sourceType = .camera  // Open camera
+        picker.allowsEditing = false  // Disable editing
+        picker.showsCameraControls = true  // Show camera controls
+        picker.modalPresentationStyle = .fullScreen  // Full screen
+
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 }
 
 struct NewProgressBar: View {
