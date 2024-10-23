@@ -406,8 +406,8 @@ struct NewQuestView: View {
         .fullScreenCover(isPresented: $isCameraPresented) {
             CameraView(selectedImage: $selectedImage) // Pass binding to CameraView
         }
-        .onChange(of: selectedImage) { image in
-            if let image = image {
+        .onChange(of: selectedImage) {
+            if let image = selectedImage {
                 let base64Image = encodeImage(image: image)
                 
                 // Assuming you have a way to select the appropriate quest
@@ -511,7 +511,7 @@ struct CameraView: View {
     @Binding var selectedImage: UIImage?
     @Environment(\.dismiss) private var dismiss
     @StateObject private var camera = CameraModel()
-    
+
     var body: some View {
         Group {
             if camera.isSimulator {
@@ -523,27 +523,48 @@ struct CameraView: View {
                         CameraPreviewView(session: camera.session)
                             .ignoresSafeArea()
                     } else {
-                        Text("Camera access not granted")
-                            .foregroundColor(.red)
+                        // Display black screen with fake camera button
+                        Color.black
+                            .ignoresSafeArea()
+                        VStack {
+                            Spacer()
+                            // Fake camera button
+                            Button(action: {
+                                // Action when the fake button is tapped (optional)
+                                // You can show an alert or instructions for enabling permissions
+                            }) {
+                                ZStack {
+                                    // Outer circle outline
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: 4)
+                                        .frame(width: 70, height: 70)
+                                    
+                                    // Inner filled circle
+                                    Circle()
+                                        .fill(Color.white)
+                                        .frame(width: 60, height: 60)
+                                        .shadow(radius: 5)
+                                }
+                            }
+                            .padding(.bottom, 40) // Add some space from the bottom
+                        }
                     }
-                    
-                    // Capture button
+
+                    // Capture button - visible only if permission is granted
                     if camera.permissionGranted {
                         VStack {
                             Spacer()
-                            
-                            // Capture button with outline
-                            HStack{
+                            HStack {
                                 Button {
                                     dismiss()
                                 } label: {
                                     Image(systemName: "xmark")
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width:24,height:24)
+                                        .frame(width: 24, height: 24)
                                         .foregroundColor(.white)
                                         .padding()
-                                        .padding(.leading,32)
+                                        .padding(.leading, 32)
                                 }
                                 Spacer()
                                 Button {
@@ -567,8 +588,6 @@ struct CameraView: View {
                                 }
                                 .padding(.bottom, 10)
                                 .padding(.leading, -32)
-                                
-                                // Cancel button
                                 Spacer()
                                 Button {
                                     dismiss()
@@ -576,7 +595,7 @@ struct CameraView: View {
                                     Image(systemName: "xmark")
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width:24,height:24)
+                                        .frame(width: 24, height: 24)
                                         .foregroundColor(.clear)
                                         .padding()
                                 }
