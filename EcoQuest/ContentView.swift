@@ -182,7 +182,8 @@ struct MainApp: View {
                         if selectedTab == "Leaf" {
                             VStack {
                                 ProfileInfoView()
-                                    .padding(.top, -70)
+                                    .edgesIgnoringSafeArea(.top)
+                                    .padding(.top, -370)
                                     .transition(.opacity)
                                 StreakBadge(isDarkMode: isDarkMode)
                                     .transition(.opacity)
@@ -193,11 +194,10 @@ struct MainApp: View {
                                         .fontWeight(.bold)
                                         .foregroundColor(isDarkMode ? .white : .black)
                                     Spacer()
-                                    Image(systemName: "timer")
-                                        .resizable()
-                                        .scaledToFit()
+                                    Image(systemName: "clock")
+                                        .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.orange)
-                                        .frame(width: 16, height: 16)
+                                        
                                     Text("24 hours")
                                         .font(.subheadline)
                                         .foregroundColor(.orange)
@@ -231,7 +231,7 @@ struct MainApp: View {
                                 
                                 ImpactView(isDarkMode: isDarkMode)
                                     .transition(.opacity)
-                                    .padding(.bottom)
+                                    
                             }
                         } else if selectedTab == "Awards" {
                             HStack {
