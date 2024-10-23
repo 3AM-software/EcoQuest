@@ -1,6 +1,7 @@
 import SwiftUI
 import Foundation
 import UIKit
+import AVFoundation
 
 #if targetEnvironment(simulator)
 import MockImagePicker
@@ -18,7 +19,7 @@ func encodeImage(image: UIImage) -> String {
 
 // Function to send image and prompt to OpenAI
 func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-    let apiKey = "API_KEY"  // Replace with your actual API key
+    let apiKey = "API_KEY"
     let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     
     var request = URLRequest(url: url)
@@ -120,7 +121,7 @@ struct ThemeColors {
     
     struct Background {
         static func primary(_ isDark: Bool) -> Color {
-            isDark ? Color(red: 18/255, green: 18/255, blue: 18/255) : Color.white
+            isDark ? Color(red: 20/255, green: 31/255, blue: 37/255) : Color.white
         }
     }
     
@@ -130,16 +131,17 @@ struct ThemeColors {
         }
         
         static func border(_ isDark: Bool) -> Color {
-            isDark ? Color(red: 44/255, green: 44/255, blue: 46/255) : Color(red: 229/255, green: 229/255, blue: 229/255)
+            isDark ? Color(red: 56/255, green: 70/255, blue: 80/255) : Color(red: 229/255, green: 229/255, blue: 229/255)
         }
     }
     
     struct Card {
         static func background(_ isDark: Bool) -> Color {
-            isDark ? Color(red: 28/255, green: 28/255, blue: 30/255) : Color.white
+            isDark ? Color(red: 20/255, green: 31/255, blue: 37/255) : Color.white
         }
     }
 }
+
 
 struct ContentView: View {
     @State private var isLoading = true
@@ -278,25 +280,31 @@ struct MainApp: View {
     
     var bottomNavBar: some View {
         HStack {
-            ForEach(["Leaf", "Awards", "Users"], id: \.self) { icon in
-                VStack(spacing: 4) {
-                    Image(systemName: getSystemImage(for: icon))
+            ForEach(["Leaf", "Awards", "Settings"], id: \.self) { icon in
+                ZStack {
+                    if selectedTab == icon {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.green.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(.green, lineWidth:2))
+                    }
+                   Image(systemName: getSystemImage(for: icon))
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 32, height: 32)
-                    Text(tabTitle(for: icon))
-                        .font(.caption)
-                        .fontWeight(/*@START_MENU_TOKEN@*/.regular/*@END_MENU_TOKEN@*/)
+                        .frame(width: 28, height: 28)
                 }
-                .foregroundColor(selectedTab == icon ? Color(red:22/255,green: 163/255,blue: 74/255) : .gray)
+                .foregroundColor(selectedTab == icon ? Color.green : .gray)
                 .frame(maxWidth: .infinity)
                 .onTapGesture {
                     selectedTab = icon
                 }
             }
         }
-        .padding(.horizontal, 32)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 64)
+        .padding(.top, 8)
+        .padding(.bottom, 20)
         .background(Color.gray.opacity(0.1))
         .overlay(
             Rectangle()
@@ -311,7 +319,7 @@ struct MainApp: View {
         switch icon {
         case "Leaf": return "Home"
         case "Awards": return "Awards"
-        case "Users": return "User"
+        case "Settings": return "User"
         default: return ""
         }
     }
@@ -319,9 +327,9 @@ struct MainApp: View {
     // Helper function for system icons
     func getSystemImage(for icon: String) -> String {
         switch icon {
-        case "Leaf": return "leaf"
-        case "Awards": return "medal"
-        case "Users": return "person"
+        case "Leaf": return "leaf.fill"
+        case "Awards": return "medal.fill"
+        case "Settings": return "gearshape.fill"
         default: return "leaf"
         }
     }
@@ -343,7 +351,6 @@ struct AwardsView: View {
     }
 }
 
-
 struct NewQuest: Identifiable {
     let id = UUID() // Unique identifier
     let title: String
@@ -351,7 +358,7 @@ struct NewQuest: Identifiable {
     let maxActions: Int
     let icon: String
     let iconColor: Color
-    let completionPrompt: String
+    let completionPrompt: String? // Made optional to match one of the versions
     var isCompleted: Bool { currActions >= maxActions } // Completion status
     var points: Int { maxActions * 10 }
     var completionTime: String?
@@ -362,9 +369,11 @@ struct NewQuestView: View {
     let isDarkMode: Bool
     @Namespace private var animationNamespace
     @State private var quests: [NewQuest]
+
+    // State for handling camera presentation and image selection
     @State private var isCameraPresented: Bool = false
     @State private var selectedQuest: NewQuest?
-    @State private var selectedImage: UIImage? // Store the selected image
+    @State private var selectedImage: UIImage?
 
     init(isDarkMode: Bool) {
         self.isDarkMode = isDarkMode
@@ -378,53 +387,11 @@ struct NewQuestView: View {
     var body: some View {
         VStack {
             ForEach(quests.indices, id: \.self) { index in
-                let currentQuest = quests[index]
-
-                Button(action: {
-                    isCameraPresented = true
-                    selectedQuest = currentQuest
-                }) {
-                    HStack(alignment: .center, spacing: 16) {
-                        Image(systemName: quests[index].icon)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 32, height: 32)
-                            .foregroundColor(quests[index].iconColor)
-
-                        VStack(alignment: .leading, spacing: 13) {
-                            HStack(alignment: .center) {
-                                Text(quests[index].title)
-                                    .font(.body)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(ThemeColors.Content.primary(isDarkMode))
-
-                                Spacer()
-                                Text("+\(quests[index].points)pts")
-                                    .foregroundColor(quests[index].iconColor)
-                                    .fontWeight(quests[index].isCompleted ? .bold : .semibold)
-                            }
-                            .padding(.top, 10)
-
-                            NewProgressBar(
-                                currActions: quests[index].currActions,
-                                maxActions: quests[index].maxActions,
-                                color: quests[index].iconColor
-                            )
-                            .padding(.bottom, 8)
-                        }
-                    }
-                    .padding(.top, 0)
-                    .padding(.bottom, 8)
-                    .contentShape(Rectangle()) // Expand the clickable area
-                }
-                .buttonStyle(PlainButtonStyle()) // Avoids default button styling
+                questButton(for: index)
                 
+                // Divider between quests
                 if index < quests.count - 1 {
-                    Divider()
-                        .frame(height: 2)
-                        .overlay(ThemeColors.Content.border(isDarkMode))
-                        .padding(.horizontal, -32)
-                        .padding(.top, 8)
+                    questDivider()
                 }
             }
         }
@@ -436,63 +403,361 @@ struct NewQuestView: View {
                 .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
         )
         .padding(.horizontal)
-        .sheet(isPresented: $isCameraPresented) {
-                    CameraView(selectedImage: $selectedImage) // Pass binding to CameraView
-                }
-        .onChange(of: selectedImage) {
-            if let image = selectedImage {
+        .fullScreenCover(isPresented: $isCameraPresented) {
+            CameraView(selectedImage: $selectedImage) // Pass binding to CameraView
+        }
+        .onChange(of: selectedImage) { image in
+            if let image = image {
                 let base64Image = encodeImage(image: image)
                 
                 // Assuming you have a way to select the appropriate quest
                 if let selectedQuest = selectedQuest {
-                    print(selectedQuest.completionPrompt) // Print the completion prompt
+                    print(selectedQuest.completionPrompt ?? "") // Print the completion prompt
                     // Here you can call your API or any other function
                     // let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt)
                 }
             }
         }
     }
-}
-// The CameraView using UIImagePickerController
-struct CameraView: UIViewControllerRepresentable {
-    @Binding var selectedImage: UIImage?
 
-    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        var parent: CameraView
-
-        init(parent: CameraView) {
-            self.parent = parent
-        }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            // Capture the selected image
-            if let image = info[.originalImage] as? UIImage {
-                self.parent.selectedImage = image  // Assign the captured image to the binding
+    @ViewBuilder
+    private func questButton(for index: Int) -> some View {
+        Button(action: {
+            if !quests[index].isCompleted {
+                isCameraPresented = true
+                selectedQuest = quests[index]
             }
-            picker.dismiss(animated: true)  // Dismiss the camera UI
+        }) {
+            HStack(alignment: .center, spacing: 16) {
+                questIcon(for: index)
+                
+                VStack(alignment: .leading, spacing: 13) {
+                    questTitleAndPoints(for: index)
+                    questProgressBar(for: index)
+                }
+                
+                if !quests[index].isCompleted {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.gray)
+                }
+            }
+            .padding(.top, 0)
+            .padding(.bottom, 8)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(PlainButtonStyle())
+    }
 
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)  // Dismiss if cancelled
+    @ViewBuilder
+    private func questIcon(for index: Int) -> some View {
+        ZStack {
+            Circle()
+                .fill(quests[index].iconColor.opacity(0.15))
+                .frame(width: 48, height: 48)
+            
+            Image(systemName: quests[index].icon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+                .foregroundColor(quests[index].iconColor)
         }
     }
 
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(parent: self)
+    @ViewBuilder
+    private func questTitleAndPoints(for index: Int) -> some View {
+        HStack(alignment: .center) {
+            Text(quests[index].title)
+                .font(.body)
+                .fontWeight(.semibold)
+                .foregroundColor(ThemeColors.Content.primary(isDarkMode))
+            
+            Spacer()
+            
+            Text("+\(quests[index].points)pts")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(quests[index].isCompleted ? quests[index].iconColor : Color.gray.opacity(0.8))
+                )
+        }
+        .padding(.top, 10)
     }
 
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.delegate = context.coordinator
-        picker.sourceType = .camera  // Open camera
-        picker.allowsEditing = false  // Disable editing
-        picker.showsCameraControls = true  // Show camera controls
-        picker.modalPresentationStyle = .fullScreen  // Full screen
-
-        return picker
+    @ViewBuilder
+    private func questProgressBar(for index: Int) -> some View {
+        NewProgressBar(
+            currActions: quests[index].currActions,
+            maxActions: quests[index].maxActions,
+            color: quests[index].iconColor
+        )
+        .padding(.bottom, 8)
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    @ViewBuilder
+    private func questDivider() -> some View {
+        Divider()
+            .frame(height: 2)
+            .overlay(ThemeColors.Content.border(isDarkMode))
+            .padding(.horizontal, -32)
+            .padding(.vertical, 8)
+    }
+}
+
+struct CameraView: View {
+    @Binding var selectedImage: UIImage?
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var camera = CameraModel()
+    
+    var body: some View {
+        Group {
+            if camera.isSimulator {
+                SimulatorCameraView(selectedImage: $selectedImage, dismiss: dismiss)
+            } else {
+                ZStack {
+                    // Camera preview
+                    if camera.permissionGranted {
+                        CameraPreviewView(session: camera.session)
+                            .ignoresSafeArea()
+                    } else {
+                        Text("Camera access not granted")
+                            .foregroundColor(.red)
+                    }
+                    
+                    // Capture button
+                    if camera.permissionGranted {
+                        VStack {
+                            Spacer()
+                            
+                            // Capture button with outline
+                            HStack{
+                                Button {
+                                    dismiss()
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width:24,height:24)
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .padding(.leading,32)
+                                }
+                                Spacer()
+                                Button {
+                                    camera.captureImage { image in
+                                        selectedImage = image
+                                        dismiss()
+                                    }
+                                } label: {
+                                    ZStack {
+                                        // Outer circle outline
+                                        Circle()
+                                            .stroke(Color.white, lineWidth: 4)
+                                            .frame(width: 70, height: 70)
+                                        
+                                        // Inner filled circle
+                                        Circle()
+                                            .fill(Color.white)
+                                            .frame(width: 60, height: 60)
+                                            .shadow(radius: 5)
+                                    }
+                                }
+                                .padding(.bottom, 10)
+                                .padding(.leading, -32)
+                                
+                                // Cancel button
+                                Spacer()
+                                Button {
+                                    dismiss()
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width:24,height:24)
+                                        .foregroundColor(.clear)
+                                        .padding()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear {
+            camera.checkPermissionsAndSetup()
+        }
+        .onDisappear {
+            camera.stopSession()
+        }
+    }
+}
+
+// Simulator specific view
+struct SimulatorCameraView: View {
+    @Binding var selectedImage: UIImage?
+    var dismiss: DismissAction
+    
+    var body: some View {
+        VStack {
+            Text("Camera Not Available in Simulator")
+                .font(.headline)
+                .padding()
+            
+            Text("Select a test image instead:")
+                .padding()
+            
+            Button("Select Test Image") {
+                // Create a simple colored rectangle as a test image
+                let renderer = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 300))
+                let testImage = renderer.image { context in
+                    UIColor.blue.setFill()
+                    context.fill(CGRect(x: 0, y: 0, width: 400, height: 300))
+                    
+                    // Add some text to the test image
+                    let attributes: [NSAttributedString.Key: Any] = [
+                        .foregroundColor: UIColor.white,
+                        .font: UIFont.systemFont(ofSize: 24)
+                    ]
+                    let text = "Test Image"
+                    text.draw(with: CGRect(x: 150, y: 130, width: 200, height: 40),
+                            options: .usesLineFragmentOrigin,
+                            attributes: attributes,
+                            context: nil)
+                }
+                
+                selectedImage = testImage
+                dismiss()
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Button("Cancel") {
+                dismiss()
+            }
+            .padding()
+        }
+    }
+}
+
+class CameraModel: NSObject, ObservableObject {
+    @Published var permissionGranted = false
+    let session = AVCaptureSession()
+    private let output = AVCapturePhotoOutput()
+    private var completion: ((UIImage?) -> Void)?
+    
+    // Check if running on simulator
+    let isSimulator: Bool = {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return false
+        #endif
+    }()
+    
+    override init() {
+        super.init()
+        session.sessionPreset = .photo
+    }
+    
+    func checkPermissionsAndSetup() {
+        // Skip setup for simulator
+        guard !isSimulator else { return }
+        
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            setupCamera()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                if granted {
+                    DispatchQueue.main.async {
+                        self?.setupCamera()
+                    }
+                }
+            }
+        default:
+            DispatchQueue.main.async { [weak self] in
+                self?.permissionGranted = false
+            }
+        }
+    }
+    
+    private func setupCamera() {
+        guard let device = AVCaptureDevice.default(for: .video) else {
+            print("No camera device available")
+            return
+        }
+        
+        do {
+            let input = try AVCaptureDeviceInput(device: device)
+            if session.canAddInput(input) {
+                session.addInput(input)
+            }
+            
+            if session.canAddOutput(output) {
+                session.addOutput(output)
+            }
+            
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.session.startRunning()
+            }
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.permissionGranted = true
+            }
+        } catch {
+            print("Error setting up camera: \(error.localizedDescription)")
+            DispatchQueue.main.async { [weak self] in
+                self?.permissionGranted = false
+            }
+        }
+    }
+    
+    func stopSession() {
+        guard !isSimulator else { return }
+        session.stopRunning()
+    }
+    
+    func captureImage(completion: @escaping (UIImage?) -> Void) {
+        self.completion = completion
+        
+        let settings = AVCapturePhotoSettings()
+        output.capturePhoto(with: settings, delegate: self)
+    }
+}
+
+extension CameraModel: AVCapturePhotoCaptureDelegate {
+    func photoOutput(_ output: AVCapturePhotoOutput,
+                    didFinishProcessingPhoto photo: AVCapturePhoto,
+                    error: Error?) {
+        guard let imageData = photo.fileDataRepresentation(),
+              let image = UIImage(data: imageData) else {
+            completion?(nil)
+            return
+        }
+        
+        completion?(image)
+    }
+}
+
+struct CameraPreviewView: UIViewRepresentable {
+    let session: AVCaptureSession
+    
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: UIScreen.main.bounds)
+        
+        let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        previewLayer.frame = view.frame
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+        
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {
+        // No updates needed
+    }
 }
 
 struct NewProgressBar: View {
@@ -570,75 +835,75 @@ struct ImpactView: View {
     
     // Card data
     let cards = [
-        ImpactCardData(
-            gradient: [Color(red: 16/255, green: 185/255, blue: 129/255),
-                      Color(red: 5/255, green: 150/255, blue: 105/255)],
-            color: Color(red: 236/255, green: 253/255, blue: 245/255),
-            outline: Color(red:167/255, green:243/255, blue:208/255),
-            text: Color(red:4/255 , green:120/255, blue:87/255),
-            icon: "leaf.fill",
-            title: "CO₂ Saved",
-            detail: """
-            Your carbon savings are making a real difference:
-            • Equivalent to 100 car trips avoided
-            • Equal to planting 40 trees
-            • Offset of 3 months of energy use
-            
-            Keep up the great work! Your daily choices are helping combat climate change.
-            """
-        ),
-        ImpactCardData(
-            gradient: [Color(red: 245/255, green: 158/255, blue: 11/255),
-                      Color(red: 234/255, green: 138/255, blue: 0/255)],
-            color: Color(red:254/255, green:252/255, blue:232/255),
-            outline: Color(red:254/255, green:240/255, blue:138/255),
-            text: Color(red:161/255 , green:98/255, blue:7/255),
-            icon: "bolt.fill",
-            title: "Energy Saved",
-            detail: """
-            Your energy conservation efforts:
-            • Powered 38 homes for a day
-            • Saved 384 kWh of electricity
-            • Reduced peak grid demand
-            
-            These savings help reduce strain on power plants and promote sustainability.
-            """
-        ),
-        ImpactCardData(
-            gradient: [Color(red: 59/255, green: 130/255, blue: 246/255),
-                      Color(red: 37/255, green: 99/255, blue: 235/255)],
-            color: Color(red:239/255,green:246/255,blue:255/255),
-            outline: Color(red:191/255, green:219/255,blue: 254/255),
-            text: Color(red:29/255, green:78/255,blue: 216/255),
-            icon: "drop.fill",
-            title: "Water Saved",
-            detail: """
-            Your water conservation impact:
-            • Saved 6,400 glasses of water
-            • Equivalent to 32 full bathtubs
-            • Protected vital water resources
-            
-            Every drop counts in preserving our planet's most precious resource.
-            """
-        ),
-        ImpactCardData(
-            gradient: [Color(red: 139/255, green: 92/255, blue: 246/255),
-                      Color(red: 124/255, green: 58/255, blue: 237/255)],
-            color: Color(red:250/255, green:245/255,blue: 255/255),
-            outline: Color(red:233/255, green:213/255,blue: 255/255),
-            text: Color(red:126/255, green:34/255,blue: 206/255),
-            icon: "arrow.3.trianglepath",
-            title: "Waste Reduced",
-            detail: """
-            Your waste reduction achievements:
-            • Prevented 430 plastic bags from landfills
-            • Recycled 86 kg of materials
-            • Saved valuable landfill space
-            
-            Your efforts help create a cleaner, more sustainable future.
-            """
-        )
-    ]
+            ImpactCardData(
+                gradient: [Color(red: 16/255, green: 185/255, blue: 129/255),
+                          Color(red: 5/255, green: 150/255, blue: 105/255)],
+                color: Color.green.opacity(0.15),
+                outline: Color.green,
+                text: Color.green,
+                icon: "leaf.fill",
+                title: "CO₂ Saved",
+                detail: """
+                Your carbon savings are making a real difference:
+                • Equivalent to 100 car trips avoided
+                • Equal to planting 40 trees
+                • Offset of 3 months of energy use
+                
+                Keep up the great work! Your daily choices are helping combat climate change.
+                """
+            ),
+            ImpactCardData(
+                gradient: [Color(red: 245/255, green: 158/255, blue: 11/255),
+                          Color(red: 234/255, green: 138/255, blue: 0/255)],
+                color: Color.yellow.opacity(0.15),
+                outline: Color.yellow,
+                text: Color.yellow,
+                icon: "bolt.fill",
+                title: "Energy Saved",
+                detail: """
+                Your energy conservation efforts:
+                • Powered 38 homes for a day
+                • Saved 384 kWh of electricity
+                • Reduced peak grid demand
+                
+                These savings help reduce strain on power plants and promote sustainability.
+                """
+            ),
+            ImpactCardData(
+                gradient: [Color(red: 59/255, green: 130/255, blue: 246/255),
+                          Color(red: 37/255, green: 99/255, blue: 235/255)],
+                color: Color.blue.opacity(0.15),
+                outline: Color.blue,
+                text: Color.blue,
+                icon: "drop.fill",
+                title: "Water Saved",
+                detail: """
+                Your water conservation impact:
+                • Saved 6,400 glasses of water
+                • Equivalent to 32 full bathtubs
+                • Protected vital water resources
+                
+                Every drop counts in preserving our planet's most precious resource.
+                """
+            ),
+            ImpactCardData(
+                gradient: [Color(red: 139/255, green: 92/255, blue: 246/255),
+                          Color(red: 124/255, green: 58/255, blue: 237/255)],
+                color: Color.purple.opacity(0.15),
+                outline: Color.purple,
+                text: Color.purple,
+                icon: "arrow.3.trianglepath",
+                title: "Waste Reduced",
+                detail: """
+                Your waste reduction achievements:
+                • Prevented 430 plastic bags from landfills
+                • Recycled 86 kg of materials
+                • Saved valuable landfill space
+                
+                Your efforts help create a cleaner, more sustainable future.
+                """
+            )
+        ]
     
     var body: some View {
         ZStack {
@@ -648,7 +913,7 @@ struct ImpactView: View {
                     GridItem(.flexible(), spacing: 16)
                 ], spacing: 16) {
                     ForEach(Array(zip(cards.indices, cards)), id: \.0) { index, card in
-                        CompactCardView(
+                        OpaqueCompactCardView(
                             card: card,
                             value: getValue(for: index),
                             unit: getUnit(for: index),
@@ -874,6 +1139,8 @@ struct ExpandedCardView: View {
 }
 
 struct HeaderTitleView: View {
+    @State private var showSettings = false
+    
     var body: some View {
         ZStack {
             LinearGradient(
@@ -892,10 +1159,10 @@ struct HeaderTitleView: View {
                     .fontWeight(.heavy)
                     .foregroundColor(.white)
                 Spacer()
-                Image("Shield")
+                Image(systemName: "shield")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 25, height: 25)
+                    .frame(width: 28, height: 28)
                     .foregroundColor(.white)
             }
             .padding([.leading, .trailing], 20.0)
@@ -926,7 +1193,7 @@ struct ProfileInfoView: View {
                 VStack(spacing: 12) {
                     HStack {
                         HStack(spacing: 8) {
-                            Image(systemName: "trophy")
+                            Image(systemName: "trophy.fill")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 24, height: 24)
@@ -946,14 +1213,20 @@ struct ProfileInfoView: View {
                     
                     // Points Display
                     HStack {
-                        VStack(alignment: .leading) {
-                            Text("2,450")
-                                .font(.title)
-                                .fontWeight(.bold)
-                            Text("Total Points")
-                                .font(.subheadline)
+                        HStack{
+                            Image(systemName: "star.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width:24,height:24)
+                                .foregroundColor(.white)
+                            VStack(alignment: .leading) {
+                                Text("2,450")
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                Text("Total Points")
+                                    .font(.subheadline)
+                            }
                         }
-                        
                         Spacer()
                         
                         VStack(alignment: .trailing) {
