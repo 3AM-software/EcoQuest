@@ -17,6 +17,10 @@
 		CA2ACB2D2CC6BF5F00C97111 /* EcoQuestUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB2C2CC6BF5F00C97111 /* EcoQuestUITestsLaunchTests.swift */; };
 		CA2ACB3D2CC6E1A600C97111 /* SVGKit in Frameworks */ = {isa = PBXBuildFile; productRef = CA2ACB3C2CC6E1A600C97111 /* SVGKit */; };
 		CA2ACB3F2CC6E1A600C97111 /* SVGKitSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CA2ACB3E2CC6E1A600C97111 /* SVGKitSwift */; };
+		CA2ACB422CC97BF100C97111 /* Quests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB412CC97BF100C97111 /* Quests.swift */; };
+		CA2ACB442CC97C4600C97111 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB432CC97C4600C97111 /* Camera.swift */; };
+		CA2ACB462CC97C8400C97111 /* Impact.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB452CC97C8300C97111 /* Impact.swift */; };
+		CA2ACB482CC97CA500C97111 /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB472CC97CA500C97111 /* Level.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +52,10 @@
 		CA2ACB2A2CC6BF5F00C97111 /* EcoQuestUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcoQuestUITests.swift; sourceTree = "<group>"; };
 		CA2ACB2C2CC6BF5F00C97111 /* EcoQuestUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EcoQuestUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		CA2ACB402CC9656800C97111 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CA2ACB412CC97BF100C97111 /* Quests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quests.swift; sourceTree = "<group>"; };
+		CA2ACB432CC97C4600C97111 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
+		CA2ACB452CC97C8300C97111 /* Impact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Impact.swift; sourceTree = "<group>"; };
+		CA2ACB472CC97CA500C97111 /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +122,10 @@
 				CA2ACB112CC6BF5C00C97111 /* ContentView.swift */,
 				CA2ACB132CC6BF5E00C97111 /* Assets.xcassets */,
 				CA2ACB152CC6BF5E00C97111 /* Preview Content */,
+				CA2ACB412CC97BF100C97111 /* Quests.swift */,
+				CA2ACB432CC97C4600C97111 /* Camera.swift */,
+				CA2ACB452CC97C8300C97111 /* Impact.swift */,
+				CA2ACB472CC97CA500C97111 /* Level.swift */,
 			);
 			path = EcoQuest;
 			sourceTree = "<group>";
@@ -282,6 +294,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CA2ACB482CC97CA500C97111 /* Level.swift in Sources */,
+				CA2ACB442CC97C4600C97111 /* Camera.swift in Sources */,
+				CA2ACB422CC97BF100C97111 /* Quests.swift in Sources */,
+				CA2ACB462CC97C8400C97111 /* Impact.swift in Sources */,
 				CA2ACB122CC6BF5C00C97111 /* ContentView.swift in Sources */,
 				CA2ACB102CC6BF5C00C97111 /* EcoQuestApp.swift in Sources */,
 			);
