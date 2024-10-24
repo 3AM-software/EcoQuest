@@ -44,7 +44,6 @@ struct Level: Identifiable, Codable {
     let totalPoints: Int
     
     var levelNum: Int {
-        var level = 1
         var accumulatedPoints = 0
         
         for i in 1...10 {
@@ -84,19 +83,6 @@ struct Level: Identifiable, Codable {
 
 }
 
-struct EnvironmentalMetrics: Codable {
-    var co2Saved: Double // in kilograms
-    var energySaved: Double // in kilowatt-hours
-    var waterSaved: Double // in liters
-    var wastePrevented: Double // in kilograms
-    
-    static let defaultValues = EnvironmentalMetrics(
-        co2Saved: 0.0,
-        energySaved: 0.0,
-        waterSaved: 0.0,
-        wastePrevented: 0.0
-    )
-}
 
 @main
 struct EcoQuestApp: App {

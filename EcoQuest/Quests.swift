@@ -11,7 +11,7 @@ func encodeImage(image: UIImage) -> String {
 
 // Function to send image and prompt to OpenAI
 func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-    let apiKey = "API_KEY"
+    let apiKey = "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"
     let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     
     var request = URLRequest(url: url)
@@ -147,7 +147,7 @@ struct NewQuestView: View {
     }
     
     var body: some View {
-        
+
         ZStack {
             QuestListView(
                 quests: $quests,
@@ -185,19 +185,25 @@ struct NewQuestView: View {
     
     private func processImageSelection(_ image: UIImage?) {
         guard let image = image, let selectedQuest = selectedQuest else { return }
+
+        // Skip processing in DEBUG mode
+        #if DEBUG
+        completeQuestManually(for: selectedQuest)
+        return
+        #endif
+
         let base64Image = encodeImage(image: image)
-        
         processingQuestId = selectedQuest.id
         processingImage = true
         isCameraPresented = false
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt ?? "analyze")
             
             DispatchQueue.main.async {
                 processingImage = false
                 processingQuestId = nil
-                
+
                 if completed.lowercased().contains("yes"),
                    let index = quests.firstIndex(where: { $0.id == selectedQuest.id }) {
                     withAnimation(.spring()) {
@@ -221,7 +227,20 @@ struct NewQuestView: View {
             }
         }
     }
-    
+
+    private func completeQuestManually(for quest: NewQuest) {
+        if let index = quests.firstIndex(where: { $0.id == quest.id }) {
+            withAnimation(.spring()) {
+                quests[index].currActions += 1
+                userViewModel.addActions(quests[index].actionPrompt)
+                if quests[index].isCompleted {
+                    userViewModel.addPoints(quests[index].points)
+                    counter += 1
+                }
+            }
+        }
+    }
+
     // MARK: - Quest List View
     
     struct QuestListView: View {
