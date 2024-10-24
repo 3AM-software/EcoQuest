@@ -66,23 +66,59 @@ class UserViewModel: ObservableObject {
             UserDefaults.standard.set(lastActionDate, forKey: "lastActionDate")
         }
     }
+    
+    @Published var co2: Int {
+        didSet {
+            UserDefaults.standard.set(co2, forKey: "co2")
+        }
+    }
 
+    @Published var energy: Int {
+        didSet {
+            UserDefaults.standard.set(energy, forKey: "energy")
+        }
+    }
 
+    @Published var bottles: Int {
+        didSet {
+            UserDefaults.standard.set(totalpoints, forKey: "bottles")
+        }
+    }
+    
+    @Published var waste: Float {
+        didSet {
+            UserDefaults.standard.set(waste, forKey: "waste")
+        }
+    }
+    
+    @Published var trips: Int {
+        didSet {
+            UserDefaults.standard.set(trips, forKey: "trips")
+        }
+    }
+    
+    @Published var trees: Int {
+        didSet {
+            UserDefaults.standard.set(trees, forKey: "trees")
+        }
+    }
     
     init() {
-        self.totalpoints = UserDefaults.standard.integer(forKey: "totalpoints")
-        self.todaypoints = UserDefaults.standard.integer(forKey: "todaypoints")
+        self.totalpoints = UserDefaults.standard.integer(forKey: "totalPoints")
+        self.todaypoints = UserDefaults.standard.integer(forKey: "todayPoints")
+        self.trees = UserDefaults.standard.integer(forKey: "trees")
+        self.trips = UserDefaults.standard.integer(forKey: "trips")
         self.streak = UserDefaults.standard.integer(forKey: "streak")
         self.lastActionDate = UserDefaults.standard.object(forKey: "lastActionDate") as? Date ?? Date()
-        self.bottleActions = UserDefaults.standard.integer(forKey: "reusablebottle")
-        self.recycleActions = UserDefaults.standard.integer(forKey: "recyclableitem")
-        self.transportAction = UserDefaults.standard.integer(forKey: "publictransport")
-        self.treeAction = UserDefaults.standard.integer(forKey: "planttree")
-        self.lightAction = UserDefaults.standard.integer(forKey: "switchlight")
-        self.CO2 = UserDefaults.standard.double(forKey: "CO2")
-        self.Energy = UserDefaults.standard.double(forKey: "Energy")
-        self.Water = UserDefaults.standard.double(forKey: "Water")
-        self.Waste = UserDefaults.standard.double(forKey: "Waste")
+        self.co2 = UserDefaults.standard.integer(forKey: "co2")
+        self.energy = UserDefaults.standard.integer(forKey: "energy")
+        self.waste = UserDefaults.standard.float(forKey: "waste")
+        self.bottles = UserDefaults.standard.integer(forKey: "bottles")
+        self.bottleActions = UserDefaults.standard.integer(forKey: "reusableBottle")
+        self.recycleActions = UserDefaults.standard.integer(forKey: "recyclableItem")
+        self.transportAction = UserDefaults.standard.integer(forKey: "publicTransport")
+        self.treeAction = UserDefaults.standard.integer(forKey: "plantTree")
+        self.lightAction = UserDefaults.standard.integer(forKey: "switchLight")
         checkAndUpdateStreak()
         print("Initial totalPoints:", self.totalpoints)
     }
@@ -131,65 +167,46 @@ class UserViewModel: ObservableObject {
             UserDefaults.standard.set(lightAction, forKey: "switchLight")
         }
     }
-    @Published var CO2: Double {
-        didSet {
-            UserDefaults.standard.set(CO2, forKey: "CO2")
-        }
-    }
-    @Published var Energy: Double {
-        didSet {
-            UserDefaults.standard.set(Energy, forKey: "Energy")
-        }
-    }
-    
-    @Published var Water: Double {
-        didSet {
-            UserDefaults.standard.set(Water, forKey: "Water")
-        }
-    }
-    
-    @Published var Waste: Double {
-        didSet {
-            UserDefaults.standard.set(Waste, forKey: "Waste")
-        }
-    }
-    
 
     func addActions(_ action: String) {
         // Your existing code to increment actions
         if action == "reusableBottle" {
             bottleActions += 1
-            Waste+=
+            bottles += 2
         }
         if action == "recyclableItem" {
             recycleActions += 1
+            waste += 0.15
         }
         if action == "publicTransport" {
             transportAction += 1
-            CO2+=1.7
+            co2 += 9
+            trips += 1
         }
         if action == "plantTree" {
             treeAction += 1
+            co2 += 1
+            trees += 1
         }
         if action == "switchLight" {
             lightAction += 1
-            Energy+=27
+            energy += 1
+    }
+        
+    // Update the streak after performing an action
+    let today = Date()
+    let calendar = Calendar.current
+    
+    if !calendar.isDateInToday(lastActionDate) {
+        if calendar.isDateInYesterday(lastActionDate) {
+            incrementStreak()
+        } else {
+            resetStreak()
         }
-        
-        // Update the streak after performing an action
-        let today = Date()
-        let calendar = Calendar.current
-        
-        if !calendar.isDateInToday(lastActionDate) {
-            if calendar.isDateInYesterday(lastActionDate) {
-                incrementStreak()
-            } else {
-                resetStreak()
-            }
-        }
-        
-        // Update the last action date
-        lastActionDate = today
+    }
+    
+    // Update the last action date
+    lastActionDate = today
     }
     
     func resetActions() {
@@ -198,6 +215,19 @@ class UserViewModel: ObservableObject {
         transportAction = 0
         treeAction = 0
         lightAction = 0
+    }
+    
+    func resetAll() {
+        co2 = 0
+        trees = 0
+        energy = 0
+        trips = 0
+        waste = 0
+        bottles = 0
+        self.resetActions()
+        todaypoints=0
+        totalpoints=0
+        
     }
     
     func incrementStreak() {
@@ -298,9 +328,8 @@ struct MainApp: View {
                                 }
                                 .padding(.horizontal)
                                 
-                                ImpactView(isDarkMode: isDarkMode)
+                                ImpactView(userViewModel: userViewModel, isDarkMode: isDarkMode)
                                     .transition(.opacity)
-                                    
                             }
                         } else if selectedTab == "Awards" {
                             HStack {
@@ -337,15 +366,17 @@ struct MainApp: View {
             }
             .edgesIgnoringSafeArea(.all)
             .onAppear {
-                            updateCountdown()
-                            checkAndPerformDailyTask()
-                            startTimer()
-                            startChecker()
-                        }
-                        .onDisappear {
-                            timer?.invalidate() // Stop the timer when the view disappears
-                        }
+                updateCountdown()
+                checkAndPerformDailyTask()
+                startTimer()
+                startChecker()
+            }
+            .onDisappear {
+                timer?.invalidate() // Stop the timer when the view disappears
+            }
         }
+
+        
     }
     
     private func startTimer() {
@@ -381,7 +412,8 @@ struct MainApp: View {
         // Compare current date with last run date
         let calendar = Calendar.current
         if !calendar.isDate(lastRunDate, inSameDayAs: currentDate) {
-            performDailyFunction()  // Call your function here
+            performDailyFunction()
+            print("reset")// Call your function here
             userDefaults.set(currentDate, forKey: "lastPointsResetDate")  // Update last run date
         }
     }

@@ -2,111 +2,108 @@ import SwiftUI
 import UIKit
 
 struct ImpactView: View {
-    @State private var co2: Int = 0
-    @State private var energy: Int = 0
-    @State private var water: Int = 0
-    @State private var waste: Int = 0
-    
+    @ObservedObject var userViewModel: UserViewModel
     
     let isDarkMode: Bool
     
     var co2String: String {
-        String(co2)
+        String(userViewModel.co2)
     }
     
     var energyString: String {
-        String(energy)
+        String(userViewModel.energy)
     }
     
     var waterString: String {
-        String(water)
+        String(userViewModel.bottles)
     }
     
     var wasteString: String {
-        String(waste)
+        String(Int(ceil(userViewModel.waste)))
     }
     
     @State private var showCards = false
     @State private var selectedCard: Int? = nil
     @Namespace private var namespace
 
-    init(isDarkMode: Bool) {
+    init(userViewModel: UserViewModel, isDarkMode: Bool) {
+        self.userViewModel = userViewModel
         self.isDarkMode = isDarkMode
     }
     
-    // Card data
-    let cards = [
-            ImpactCardData(
-                gradient: [Color(red: 16/255, green: 185/255, blue: 129/255),
-                          Color(red: 5/255, green: 150/255, blue: 105/255)],
-                color: Color.green.opacity(0.15),
-                outline: Color.green,
-                text: Color.green,
-                icon: "leaf.fill",
-                title: "CO₂ Saved",
-                detail: """
-                Your carbon savings are making a real difference:
-                • Equivalent to 100 car trips avoided
-                • Equal to planting 40 trees
-                • Offset of 3 months of energy use
-                
-                Keep up the great work! Your daily choices are helping combat climate change.
-                """
-            ),
-            ImpactCardData(
-                gradient: [Color(red: 245/255, green: 158/255, blue: 11/255),
-                          Color(red: 234/255, green: 138/255, blue: 0/255)],
-                color: Color.yellow.opacity(0.15),
-                outline: Color.yellow,
-                text: Color.yellow,
-                icon: "bolt.fill",
-                title: "Energy Saved",
-                detail: """
-                Your energy conservation efforts:
-                • Powered 38 homes for a day
-                • Saved 384 kWh of electricity
-                • Reduced peak grid demand
-                
-                These savings help reduce strain on power plants and promote sustainability.
-                """
-            ),
-            ImpactCardData(
-                gradient: [Color(red: 59/255, green: 130/255, blue: 246/255),
-                          Color(red: 37/255, green: 99/255, blue: 235/255)],
-                color: Color.blue.opacity(0.15),
-                outline: Color.blue,
-                text: Color.blue,
-                icon: "drop.fill",
-                title: "Water Saved",
-                detail: """
-                Your water conservation impact:
-                • Saved 6,400 glasses of water
-                • Equivalent to 32 full bathtubs
-                • Protected vital water resources
-                
-                Every drop counts in preserving our planet's most precious resource.
-                """
-            ),
-            ImpactCardData(
-                gradient: [Color(red: 139/255, green: 92/255, blue: 246/255),
-                          Color(red: 124/255, green: 58/255, blue: 237/255)],
-                color: Color.purple.opacity(0.15),
-                outline: Color.purple,
-                text: Color.purple,
-                icon: "arrow.3.trianglepath",
-                title: "Waste Reduced",
-                detail: """
-                Your waste reduction achievements:
-                • Prevented 430 plastic bags from landfills
-                • Recycled 86 kg of materials
-                • Saved valuable landfill space
-                
-                Your efforts help create a cleaner, more sustainable future.
-                """
-            )
-        ]
+    // Card dat
     
     var body: some View {
+        let cards = [
+                ImpactCardData(
+                    gradient: [Color(red: 16/255, green: 185/255, blue: 129/255),
+                              Color(red: 5/255, green: 150/255, blue: 105/255)],
+                    color: Color.green.opacity(0.15),
+                    outline: Color.green,
+                    text: Color.green,
+                    icon: "leaf.fill",
+                    title: "CO₂ Saved",
+                    detail: """
+                    Your carbon savings are making a real difference:
+                    • Equivalent to \(userViewModel.trips) car trip(s) avoided
+                    • Equal to planting \((Double)(userViewModel.trips)*0.4) trees
+                    
+                    Keep up the great work! Your daily choices are helping combat climate change.
+                    """
+                ),
+                ImpactCardData(
+                    gradient: [Color(red: 245/255, green: 158/255, blue: 11/255),
+                              Color(red: 234/255, green: 138/255, blue: 0/255)],
+                    color: Color.yellow.opacity(0.15),
+                    outline: Color.yellow,
+                    text: Color.yellow,
+                    icon: "bolt.fill",
+                    title: "Energy Saved",
+                    detail: """
+                    Your energy conservation efforts:
+                    • Powered \(userViewModel.energy/30) home(s) for a day
+                    • Saved \(userViewModel.energy) kWh of electricity
+                    • Reduced peak grid demand
+                    
+                    These savings help reduce strain on power plants and promote sustainability.
+                    """
+                ),
+                ImpactCardData(
+                    gradient: [Color(red: 59/255, green: 130/255, blue: 246/255),
+                              Color(red: 37/255, green: 99/255, blue: 235/255)],
+                    color: Color.blue.opacity(0.15),
+                    outline: Color.blue,
+                    text: Color.blue,
+                    icon: "drop.fill",
+                    title: "Bottles Saved",
+                    detail: """
+                    Your bottle conservation impact:
+                    • Saved \(userViewModel.bottles) glass(es) of water
+                    • Equivalent to \((Float)(userViewModel.bottles)/300) bathtubs
+                    • Protected vital water resources
+                    
+                    Every drop counts in preserving our planet's most precious resource.
+                    """
+                ),
+                ImpactCardData(
+                    gradient: [Color(red: 139/255, green: 92/255, blue: 246/255),
+                              Color(red: 124/255, green: 58/255, blue: 237/255)],
+                    color: Color.purple.opacity(0.15),
+                    outline: Color.purple,
+                    text: Color.purple,
+                    icon: "arrow.3.trianglepath",
+                    title: "Waste Reduced",
+                    detail: """
+                    Your waste reduction achievements:
+                    • Prevented \(userViewModel.waste*3) plastic bags from landfills
+                    • Recycled \(userViewModel.waste) kg of materials
+                    • Saved valuable landfill space
+                    
+                    Your efforts help create a cleaner, more sustainable future.
+                    """
+                )
+            ]
+        
         ZStack {
             VStack(alignment: .leading, spacing: 16) {
                 LazyVGrid(columns: [
@@ -175,7 +172,7 @@ struct ImpactView: View {
         switch index {
         case 0: return "kg"
         case 1: return "kWh"
-        case 2: return "L"
+        case 2: return ""
         case 3: return "kg"
         default: return ""
         }
