@@ -9,9 +9,8 @@ func encodeImage(image: UIImage) -> String {
     return "";
 }
 
-// Function to send image and prompt to OpenAI
 func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-    let apiKey = "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"
+    let apiKey = "FRICK_YOU_GITHUB"
     let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     
     var request = URLRequest(url: url)
@@ -85,9 +84,9 @@ func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
         print("here")
         // Handle the response
         if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-            let choices = json["choices"] as? [[String: Any]],
-            let message = choices.first?["message"] as? [String: Any],
-            let content = message["content"] as? String {
+           let choices = json["choices"] as? [[String: Any]],
+           let message = choices.first?["message"] as? [String: Any],
+           let content = message["content"] as? String {
             result = content // Store the response in the result variable
         } else {
             print("Failed to parse JSON.")
@@ -103,7 +102,6 @@ func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
     return result // Return the result
 }
 
-
 struct NewQuest: Identifiable {
     let id = UUID() // Unique identifier
     let title: String
@@ -117,6 +115,15 @@ struct NewQuest: Identifiable {
     var points: Int { maxActions * 10 }
     var completionTime: String?
     var progress: Double { Double(currActions) / Double(maxActions) }
+}
+
+class GlobalState: ObservableObject {
+    static let shared = GlobalState()
+    
+    @Published var processingImage: Bool = false
+    @Published var showErrorMessage: Bool = false
+    
+    private init() {}
 }
 
 struct NewQuestView: View {
@@ -184,24 +191,19 @@ struct NewQuestView: View {
     }
     
     private func processImageSelection(_ image: UIImage?) {
+        @ObservedObject var globalState = GlobalState.shared
+        
         guard let image = image, let selectedQuest = selectedQuest else { return }
 
-        // Skip processing in DEBUG mode
-        #if DEBUG
-        completeQuestManually(for: selectedQuest)
-        return
-        #endif
-
         let base64Image = encodeImage(image: image)
-        processingQuestId = selectedQuest.id
-        processingImage = true
+        globalState.processingImage = true
         isCameraPresented = false
 
         DispatchQueue.global(qos: .userInitiated).async {
             let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt ?? "analyze")
             
             DispatchQueue.main.async {
-                processingImage = false
+                globalState.processingImage = false
                 processingQuestId = nil
 
                 if completed.lowercased().contains("yes"),
@@ -216,11 +218,9 @@ struct NewQuestView: View {
                     }
                 } else {
                     withAnimation {
-                        errorQuestId = selectedQuest.id
-                        showErrorMessage = true
+                        globalState.showErrorMessage = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            showErrorMessage = false
-                            errorQuestId = nil
+                            globalState.showErrorMessage = false
                         }
                     }
                 }

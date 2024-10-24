@@ -425,6 +425,72 @@ struct AwardPopupView: View {
     }
 }
 
+struct LoadingOverlay: View {
+    let isDarkMode: Bool
+    
+    var body: some View {
+        ZStack {
+            // Semi-transparent background
+            Color.black.opacity(0.7)
+                .ignoresSafeArea(.all)
+            
+            // Overlay content
+            VStack(spacing: 20) {
+                // Circular loading indicator
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .gray))
+                    .scaleEffect(1.5)
+                    .padding()
+                
+                // Loading message
+                Text("Processing Quest")
+                    .foregroundColor(isDarkMode ? .white : .black)
+                    .font(.headline)
+                    .padding(.top, 8)
+            }
+            .padding(30)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(ThemeColors.Card.background(isDarkMode)) // Dark background with some transparency
+                    .shadow(radius: 10)
+            )
+            .padding(40)
+            .transition(.scale)
+        }
+    }
+}
+struct ErrorOverlay: View {
+    let isDarkMode: Bool
+    
+    var body: some View {
+        ZStack {
+            // Semi-transparent background
+            Color.black.opacity(0.7)
+                .ignoresSafeArea(.all)
+            
+            // Overlay content
+            HStack {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.red)
+                    .font(.system(size: 24))
+                
+                Text("You didn't meet the quest requirement!")
+                    .foregroundColor(.red)
+                    .fontWeight(.semibold)
+            }
+            .padding(30)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(ThemeColors.Card.background(isDarkMode)) // Dark background with some transparency
+                    .shadow(radius: 10)
+            )
+            .padding(40)
+            .transition(.scale)
+        }
+    }
+}
+
+
 struct ContentView: View {
     @State private var isLoading = true
     var body: some View {
@@ -444,7 +510,7 @@ struct ContentView: View {
 }
 
 struct MainApp: View {
-
+    @ObservedObject var globalState = GlobalState.shared
     @State private var showSettings = false
     @State private var selectedTab: String = "Leaf"
     @AppStorage("isDarkMode") private var isDarkMode = false
@@ -568,6 +634,34 @@ struct MainApp: View {
                                message: "You unlocked an award!",
                                awardNum: userViewModel.awardNum,
                                isDarkMode: isDarkMode)
+                    .opacity(popupOpacity)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            popupOpacity = 1.0
+                        }
+                    }
+                    .onDisappear {
+                        // Reset values if needed
+                        popupOpacity = 0.0
+                        popupScale = 0.8
+                    }
+            }
+            if globalState.processingImage {
+                LoadingOverlay(isDarkMode: isDarkMode)
+                    .opacity(popupOpacity)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            popupOpacity = 1.0
+                        }
+                    }
+                    .onDisappear {
+                        // Reset values if needed
+                        popupOpacity = 0.0
+                        popupScale = 0.8
+                    }
+            }
+            if globalState.showErrorMessage {
+                ErrorOverlay(isDarkMode: isDarkMode)
                     .opacity(popupOpacity)
                     .onAppear {
                         withAnimation(.easeOut(duration: 0.5)) {
