@@ -77,7 +77,7 @@ struct ImpactView: View {
                 outline: Color.blue,
                 text: Color.blue,
                 icon: "drop.fill",
-                title: "Water Saved",
+                title: "Bottles Saved",
                 detail: """
                 Your water conservation impact:
                 • Saved 6,400 glasses of water
