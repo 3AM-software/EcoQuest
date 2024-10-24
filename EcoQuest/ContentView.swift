@@ -66,14 +66,54 @@ class UserViewModel: ObservableObject {
             UserDefaults.standard.set(lastActionDate, forKey: "lastActionDate")
         }
     }
+    
+    @Published var co2: Int {
+        didSet {
+            UserDefaults.standard.set(co2, forKey: "co2")
+        }
+    }
 
+    @Published var energy: Int {
+        didSet {
+            UserDefaults.standard.set(energy, forKey: "energy")
+        }
+    }
 
+    @Published var bottles: Int {
+        didSet {
+            UserDefaults.standard.set(totalpoints, forKey: "bottles")
+        }
+    }
+    
+    @Published var waste: Float {
+        didSet {
+            UserDefaults.standard.set(waste, forKey: "waste")
+        }
+    }
+    
+    @Published var trips: Int {
+        didSet {
+            UserDefaults.standard.set(trips, forKey: "trips")
+        }
+    }
+    
+    @Published var trees: Int {
+        didSet {
+            UserDefaults.standard.set(trees, forKey: "trees")
+        }
+    }
     
     init() {
         self.totalpoints = UserDefaults.standard.integer(forKey: "totalpoints")
         self.todaypoints = UserDefaults.standard.integer(forKey: "todaypoints")
+        self.trees = UserDefaults.standard.integer(forKey: "trees")
+        self.trips = UserDefaults.standard.integer(forKey: "trips")
         self.streak = UserDefaults.standard.integer(forKey: "streak")
         self.lastActionDate = UserDefaults.standard.object(forKey: "lastActionDate") as? Date ?? Date()
+        self.co2 = UserDefaults.standard.integer(forKey: "co2")
+        self.energy = UserDefaults.standard.integer(forKey: "energy")
+        self.waste = UserDefaults.standard.float(forKey: "waste")
+        self.bottles = UserDefaults.standard.integer(forKey: "bottles")
         self.bottleActions = UserDefaults.standard.integer(forKey: "reusablebottle")
         self.recycleActions = UserDefaults.standard.integer(forKey: "recyclableitem")
         self.transportAction = UserDefaults.standard.integer(forKey: "publictransport")
@@ -132,18 +172,25 @@ class UserViewModel: ObservableObject {
         // Your existing code to increment actions
         if action == "reusableBottle" {
             bottleActions += 1
+            bottles += 2
         }
         if action == "recyclableItem" {
             recycleActions += 1
+            waste += 0.15
         }
         if action == "publicTransport" {
             transportAction += 1
+            co2 += 9
+            trips += 1
         }
         if action == "plantTree" {
             treeAction += 1
+            co2 += 1
+            trees += 1
         }
         if action == "switchLight" {
             lightAction += 1
+            energy += 1
         }
         
         // Update the streak after performing an action
@@ -268,9 +315,8 @@ struct MainApp: View {
                                 }
                                 .padding(.horizontal)
                                 
-                                ImpactView(isDarkMode: isDarkMode)
+                                ImpactView(userViewModel: userViewModel, isDarkMode: isDarkMode)
                                     .transition(.opacity)
-                                    
                             }
                         } else if selectedTab == "Awards" {
                             HStack {
