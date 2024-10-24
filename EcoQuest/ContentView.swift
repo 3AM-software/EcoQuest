@@ -48,21 +48,59 @@ class UserViewModel: ObservableObject {
             UserDefaults.standard.set(totalpoints, forKey: "totalPoints")
         }
     }
-
-    init() {
-        self.totalpoints = UserDefaults.standard.integer(forKey: "totalPoints")
-        self.bottleActions = UserDefaults.standard.integer(forKey: "reusableBottle")
-        self.recycleActions = UserDefaults.standard.integer(forKey: "recyclableItem")
-        self.transportAction = UserDefaults.standard.integer(forKey: "publicTransport")
-        self.treeAction = UserDefaults.standard.integer(forKey: "plantTree")
-        self.lightAction = UserDefaults.standard.integer(forKey: "switchLight")
+    
+    @Published var todaypoints: Int {
+        didSet {
+            UserDefaults.standard.set(totalpoints, forKey: "todayPoints")
+        }
     }
+
+    @Published var streak: Int {
+        didSet {
+            UserDefaults.standard.set(streak, forKey: "streak")
+        }
+    }
+    
+    @Published var lastActionDate: Date {
+        didSet {
+            UserDefaults.standard.set(lastActionDate, forKey: "lastActionDate")
+        }
+    }
+
+
+    
+    init() {
+        self.totalpoints = UserDefaults.standard.integer(forKey: "totalpoints")
+        self.todaypoints = UserDefaults.standard.integer(forKey: "todaypoints")
+        self.streak = UserDefaults.standard.integer(forKey: "streak")
+        self.lastActionDate = UserDefaults.standard.object(forKey: "lastActionDate") as? Date ?? Date()
+        self.bottleActions = UserDefaults.standard.integer(forKey: "reusablebottle")
+        self.recycleActions = UserDefaults.standard.integer(forKey: "recyclableitem")
+        self.transportAction = UserDefaults.standard.integer(forKey: "publictransport")
+        self.treeAction = UserDefaults.standard.integer(forKey: "planttree")
+        self.lightAction = UserDefaults.standard.integer(forKey: "switchlight")
+        checkAndUpdateStreak()
+        print("Initial totalPoints:", self.totalpoints)
+    }
+    
+    func checkAndUpdateStreak() {
+        let calendar = Calendar.current
+        if calendar.isDateInYesterday(lastActionDate) {
+            // If the last action date was yesterday, continue the streak
+            incrementStreak()
+        } else if !calendar.isDateInToday(lastActionDate) {
+            // If the last action date wasn't today or yesterday, reset the streak
+            resetStreak()
+        }
+    }
+    
 
     func addPoints(_ pointsToAdd: Int) {
         totalpoints += pointsToAdd
+        todaypoints += pointsToAdd
     }
     func resetPoints() {
-        totalpoints = 0
+        todaypoints = 0
     }
     @Published var bottleActions: Int {
         didSet {
@@ -91,23 +129,39 @@ class UserViewModel: ObservableObject {
     }
 
     func addActions(_ action: String) {
-        if action == "reusableBottle"{
-            bottleActions+=1
+        // Your existing code to increment actions
+        if action == "reusableBottle" {
+            bottleActions += 1
         }
-        if action == "recyclableItem"{
-            recycleActions+=1
+        if action == "recyclableItem" {
+            recycleActions += 1
         }
-        if action == "publicTransport"{
-            transportAction+=1
+        if action == "publicTransport" {
+            transportAction += 1
         }
-        if action == "plantTree"{
-            treeAction+=1
+        if action == "plantTree" {
+            treeAction += 1
         }
-        if action == "switchLight"{
-            lightAction+=1
+        if action == "switchLight" {
+            lightAction += 1
         }
         
+        // Update the streak after performing an action
+        let today = Date()
+        let calendar = Calendar.current
+        
+        if !calendar.isDateInToday(lastActionDate) {
+            if calendar.isDateInYesterday(lastActionDate) {
+                incrementStreak()
+            } else {
+                resetStreak()
+            }
+        }
+        
+        // Update the last action date
+        lastActionDate = today
     }
+    
     func resetActions() {
         bottleActions = 0
         recycleActions = 0
@@ -115,9 +169,15 @@ class UserViewModel: ObservableObject {
         treeAction = 0
         lightAction = 0
     }
+    
+    func incrementStreak() {
+            streak += 1
+    }
+
+    func resetStreak() {
+        streak = 0
+    }
 }
-
-
 
 struct ContentView: View {
     @State private var isLoading = true
@@ -143,8 +203,11 @@ struct MainApp: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var selectedDetent: PresentationDetent = .height(700)
     @StateObject private var userViewModel = UserViewModel()
-
     
+    @State private var lastRunDate: Date = Date.distantPast
+    @State private var countdown: String = "24:00" // To hold the countdown string
+    @State private var timer: Timer?
+
     var body: some View {
         ZStack {
             ThemeColors.Background.primary(isDarkMode)
@@ -161,7 +224,7 @@ struct MainApp: View {
                                     .edgesIgnoringSafeArea(.top)
                                     .padding(.top, -370)
                                     .transition(.opacity)
-                                StreakBadge(isDarkMode: isDarkMode)
+                                StreakBadge(isDarkMode: isDarkMode, userViewModel: userViewModel)
                                     .transition(.opacity)
                                 
                                 HStack {
@@ -174,7 +237,7 @@ struct MainApp: View {
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.orange)
                                         
-                                    Text("24 hours")
+                                    Text(countdown)
                                         .font(.subheadline)
                                         .foregroundColor(.orange)
                                         .fontWeight(.medium)
@@ -243,7 +306,59 @@ struct MainApp: View {
                 bottomNavBar
             }
             .edgesIgnoringSafeArea(.all)
+            .onAppear {
+                            updateCountdown()
+                            checkAndPerformDailyTask()
+                            startTimer()
+                            startChecker()
+                        }
+                        .onDisappear {
+                            timer?.invalidate() // Stop the timer when the view disappears
+                        }
         }
+    }
+    
+    private func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
+            updateCountdown()
+        }
+    }
+    
+    private func startChecker() {
+        timer = Timer.scheduledTimer(withTimeInterval: 60*60, repeats: true) { _ in
+            checkAndPerformDailyTask()
+        }
+    }
+    private func updateCountdown() {
+        let calendar = Calendar.current
+        let now = Date()
+        let midnight = calendar.nextDate(after: now, matching: DateComponents(hour: 0, minute: 0), matchingPolicy: .nextTime)!
+        
+        let timeInterval = midnight.timeIntervalSince(now)
+        let hours = Int(timeInterval) / 3600
+        let minutes = (Int(timeInterval) % 3600) / 60
+        
+        countdown = String(format: "%02d:%02d", hours, minutes) // Update countdown string
+    }
+    private func checkAndPerformDailyTask() {
+        let userDefaults = UserDefaults.standard
+        let currentDate = Date()
+        
+        // Retrieve last run date from UserDefaults
+        if let savedDate = userDefaults.object(forKey: "lastPointsResetDate") as? Date {
+            lastRunDate = savedDate
+        }
+        // Compare current date with last run date
+        let calendar = Calendar.current
+        if !calendar.isDate(lastRunDate, inSameDayAs: currentDate) {
+            performDailyFunction()  // Call your function here
+            userDefaults.set(currentDate, forKey: "lastPointsResetDate")  // Update last run date
+        }
+    }
+    private func performDailyFunction() {
+        // Your logic to reset points or other daily tasks
+        userViewModel.resetActions()
+        userViewModel.resetPoints()
     }
     
     var bottomNavBar: some View {

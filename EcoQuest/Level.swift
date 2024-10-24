@@ -32,13 +32,16 @@ struct HeaderTitleView: View {
     }
 }
 
+import SwiftUI
+
 struct ProfileInfoView: View {
-    @State private var todayPoints: Int = 0
-    @State private var totalPoints: Int = 0
-    @State private var currentLevel: Level = Level.defaultLevel()
     @ObservedObject var userViewModel: UserViewModel
     
     var body: some View {
+        // Use totalpoints to create the Level instance
+        let points = userViewModel.totalpoints
+        let level = Level(totalPoints: points) // Update to use the new Level initialization
+        
         ZStack {
             LinearGradient(
                 gradient: Gradient(colors: [
@@ -59,27 +62,28 @@ struct ProfileInfoView: View {
                                 .scaledToFit()
                                 .frame(width: 24, height: 24)
                                 .foregroundColor(.yellow)
-                            Text("Level \(currentLevel.num) \(currentLevel.title)")
+                            Text("Level \(level.levelNum) \(level.levelTitle)")
                                 .font(.title3)
                                 .fontWeight(.bold)
                         }
                         
                         Spacer()
                         
-                        if currentLevel.num < 10 {
-                            Text("Next: \(currentLevel.pointsToNext) pts")
+                        if level.levelNum < 10 {
+                            Text("Next: \(level.pointsToNext) pts")
                                 .font(.subheadline)
                         } else {
                             Text("Max Level")
                                 .font(.subheadline)
                         }
                     }
-                    
-                    LevelProgressBar(progress: Double(currentLevel.progressToNext))
+                    withAnimation(.spring()) {
+                        LevelProgressBar(progress: Double(level.progress))
+                    }
                     
                     // Points Display
                     HStack {
-                        HStack{
+                        HStack {
                             Image(systemName: "star.fill")
                                 .resizable()
                                 .scaledToFit()
@@ -96,7 +100,7 @@ struct ProfileInfoView: View {
                         Spacer()
                         
                         VStack(alignment: .trailing) {
-                            Text("+\(todayPoints)")
+                            Text("+\(userViewModel.todaypoints)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             Text("Today's Points")
@@ -109,11 +113,12 @@ struct ProfileInfoView: View {
                 .cornerRadius(16)
             }
             .padding(.top, 340)
-            .padding([.leading,.trailing])
+            .padding([.leading, .trailing])
         }
         .foregroundColor(.white)
     }
 }
+
 
 struct LevelProgressBar: View {
     let progress: Double
@@ -136,14 +141,14 @@ struct LevelProgressBar: View {
 
 struct StreakBadge: View {
     let isDarkMode: Bool
-    @State private var streak: Int = 0
+    @ObservedObject var userViewModel: UserViewModel
     
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "flame.fill")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.orange)
-            Text("\(streak) Day Streak!")
+            Text("\(userViewModel.streak) Day Streak!")
                 .fontWeight(.bold)
                 .foregroundColor(ThemeColors.Content.primary(isDarkMode))
         }
