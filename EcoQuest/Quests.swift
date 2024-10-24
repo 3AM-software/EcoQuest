@@ -1,3 +1,4 @@
+import ConfettiSwiftUI
 import SwiftUI
 
 func encodeImage(image: UIImage) -> String {
@@ -10,7 +11,7 @@ func encodeImage(image: UIImage) -> String {
 
 // Function to send image and prompt to OpenAI
 func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-    let apiKey = "API"
+    let apiKey = "API_KEY"
     let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     
     var request = URLRequest(url: url)
@@ -84,9 +85,9 @@ func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
         print("here")
         // Handle the response
         if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-           let choices = json["choices"] as? [[String: Any]],
-           let message = choices.first?["message"] as? [String: Any],
-           let content = message["content"] as? String {
+            let choices = json["choices"] as? [[String: Any]],
+            let message = choices.first?["message"] as? [String: Any],
+            let content = message["content"] as? String {
             result = content // Store the response in the result variable
         } else {
             print("Failed to parse JSON.")
@@ -111,6 +112,7 @@ struct NewQuest: Identifiable {
     let icon: String
     let iconColor: Color
     let completionPrompt: String? // Made optional to match one of the versions
+    let actionPrompt: String
     var isCompleted: Bool { currActions >= maxActions } // Completion status
     var points: Int { maxActions * 10 }
     var completionTime: String?
@@ -121,25 +123,30 @@ struct NewQuestView: View {
     let isDarkMode: Bool
     @Namespace private var animationNamespace
     @State private var quests: [NewQuest]
+    @ObservedObject var userViewModel: UserViewModel
     @State private var isCameraPresented: Bool = false
     @State private var selectedQuest: NewQuest?
     @State private var selectedImage: UIImage?
     @State private var processingImage: Bool = false
     @State private var processingQuestId: UUID?
+    @State private var showErrorMessage: Bool = false
+    @State private var counter: Int = 0
 
-    init(isDarkMode: Bool) {
+
+    init(isDarkMode: Bool, userViewModel: UserViewModel) {
         self.isDarkMode = isDarkMode
         _quests = State(initialValue: [
-            NewQuest(title: "Use a reusable water bottle", currActions: 0, maxActions: 1, icon: "drop.fill", iconColor: .blue, completionPrompt: "Does the image contain a reusable water bottle? Please answer using just 'yes' or 'no'."),
-            NewQuest(title: "Recycle 3 items", currActions: 2, maxActions: 3, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image contain a recyclable item? Please answer using just 'yes' or 'no'."),
-            NewQuest(title: "Take public transport", currActions: 3, maxActions: 5, icon: "bus.fill", iconColor: .green, completionPrompt: "Does the image contain a form of public transport? Please answer using just 'yes' or 'no'."),
-            NewQuest(title: "Plant a tree", currActions: 1, maxActions: 1, icon: "tree.fill", iconColor: .brown, completionPrompt: "Does the image contain a newly planted tree? Please answer using just 'yes' or 'no'."),
-            NewQuest(title: "Switch off unused lights", currActions: 1, maxActions: 4, icon: "lightbulb.fill", iconColor: .yellow, completionPrompt: "Does the image show a light switch being turned off? Please answer using just 'yes' or 'no'.")
+            NewQuest(title: "Use a reusable water bottle", currActions: userViewModel.bottleActions, maxActions: 1, icon: "drop.fill", iconColor: .blue, completionPrompt: "Does the image contain a reusable water bottle? Please answer using just 'yes' or 'no'.", actionPrompt: "reusableBottle"),
+            NewQuest(title: "Recycle 3 items", currActions: userViewModel.recycleActions, maxActions: 3, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image contain a recyclable item? Please answer using just 'yes' or 'no'.", actionPrompt: "recyclableItem"),
+            NewQuest(title: "Take public transport", currActions: userViewModel.transportAction, maxActions: 5, icon: "bus.fill", iconColor: .green, completionPrompt: "Does the image contain a form of public transport? Please answer using just 'yes' or 'no'.", actionPrompt: "publicTransport"),
+            NewQuest(title: "Plant a tree", currActions: userViewModel.treeAction, maxActions: 1, icon: "tree.fill", iconColor: .brown, completionPrompt: "Does the image contain a newly planted tree? Please answer using just 'yes' or 'no'.", actionPrompt: "plantTree"),
+            NewQuest(title: "Switch off unused lights", currActions: userViewModel.lightAction, maxActions: 4, icon: "lightbulb.fill", iconColor: .yellow, completionPrompt: "Does the image show a light switch being turned off? Please answer using just 'yes' or 'no'.", actionPrompt: "switchLight")
         ])
-
+        self.userViewModel = userViewModel
     }
 
     var body: some View {
+        
         ZStack {
             QuestListView(
                 quests: $quests,
@@ -147,6 +154,7 @@ struct NewQuestView: View {
                 processingQuestId: processingQuestId,
                 cameraAction: handleQuestSelection
             )
+            
             .background(ThemeColors.Card.background(isDarkMode))
             .cornerRadius(12)
             .overlay(
@@ -157,10 +165,27 @@ struct NewQuestView: View {
             .fullScreenCover(isPresented: $isCameraPresented) {
                 CameraView(selectedImage: $selectedImage)
             }
-            .onChange(of: selectedImage) { newValue in
-                processImageSelection(newValue)
+            .onChange(of: selectedImage) {
+                processImageSelection(selectedImage)
             }
+            if showErrorMessage {
+                HStack {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.red)
+                        .font(.system(size: 24))
+                    
+                    Text("You didn't meet the quest requirement!")
+                        .foregroundColor(.red)
+                        .fontWeight(.semibold)
+                }
+                .padding()
+                .background(ThemeColors.Card.background(isDarkMode))
+                .cornerRadius(8) // Optional: Add corner radius for rounded edges
+                .shadow(color: .gray.opacity(0.3), radius: 4, x: 0, y: 2) // Optional: Add shadow for better visibility
+            }
+            
         }
+        .confettiCannon(counter: $counter)
     }
 
     // MARK: - Helper Methods
@@ -181,7 +206,7 @@ struct NewQuestView: View {
         isCameraPresented = false
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt ?? "")
+            let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt ?? "analyze")
 
             DispatchQueue.main.async {
                 processingImage = false
@@ -189,8 +214,23 @@ struct NewQuestView: View {
                 if completed.lowercased().contains("yes"),
                    let index = quests.firstIndex(where: { $0.id == selectedQuest.id }) {
                     withAnimation(.spring()) {
-                        quests[index].currActions += 1
+                        quests[index].currActions+=1
+                        userViewModel.addActions(quests[index].actionPrompt)
+                        if quests[index].isCompleted {
+                            userViewModel.addPoints(quests[index].points)
+                            counter+=1
+
+                        }
                     }
+                }
+                else{
+                    withAnimation {
+                        showErrorMessage = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            showErrorMessage = false
+                        }
+                    }
+                    
                 }
             }
         }

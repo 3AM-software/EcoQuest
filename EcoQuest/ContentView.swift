@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import UIKit
 import AVFoundation
+import Combine
 
 #if targetEnvironment(simulator)
 import MockImagePicker
@@ -41,10 +42,85 @@ struct ThemeColors {
     }
 }
 
+class UserViewModel: ObservableObject {
+    @Published var totalpoints: Int {
+        didSet {
+            UserDefaults.standard.set(totalpoints, forKey: "totalPoints")
+        }
+    }
+
+    init() {
+        self.totalpoints = UserDefaults.standard.integer(forKey: "totalPoints")
+        self.bottleActions = UserDefaults.standard.integer(forKey: "reusableBottle")
+        self.recycleActions = UserDefaults.standard.integer(forKey: "recyclableItem")
+        self.transportAction = UserDefaults.standard.integer(forKey: "publicTransport")
+        self.treeAction = UserDefaults.standard.integer(forKey: "plantTree")
+        self.lightAction = UserDefaults.standard.integer(forKey: "switchLight")
+    }
+
+    func addPoints(_ pointsToAdd: Int) {
+        totalpoints += pointsToAdd
+    }
+    func resetPoints() {
+        totalpoints = 0
+    }
+    @Published var bottleActions: Int {
+        didSet {
+            UserDefaults.standard.set(bottleActions, forKey: "reusableBottle")
+        }
+    }
+    @Published var recycleActions: Int {
+        didSet {
+            UserDefaults.standard.set(recycleActions, forKey: "recyclableItem")
+        }
+    }
+    @Published var transportAction: Int {
+        didSet {
+            UserDefaults.standard.set(transportAction, forKey: "publicTransport")
+        }
+    }
+    @Published var treeAction: Int {
+        didSet {
+            UserDefaults.standard.set(treeAction, forKey: "plantTree")
+        }
+    }
+    @Published var lightAction: Int {
+        didSet {
+            UserDefaults.standard.set(lightAction, forKey: "switchLight")
+        }
+    }
+
+    func addActions(_ action: String) {
+        if action == "reusableBottle"{
+            bottleActions+=1
+        }
+        if action == "recyclableItem"{
+            recycleActions+=1
+        }
+        if action == "publicTransport"{
+            transportAction+=1
+        }
+        if action == "plantTree"{
+            treeAction+=1
+        }
+        if action == "switchLight"{
+            lightAction+=1
+        }
+        
+    }
+    func resetActions() {
+        bottleActions = 0
+        recycleActions = 0
+        transportAction = 0
+        treeAction = 0
+        lightAction = 0
+    }
+}
+
+
 
 struct ContentView: View {
     @State private var isLoading = true
-
     var body: some View {
         Group {
             if isLoading {
@@ -66,6 +142,8 @@ struct MainApp: View {
     @State private var selectedTab: String = "Leaf"
     @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var selectedDetent: PresentationDetent = .height(700)
+    @StateObject private var userViewModel = UserViewModel()
+
     
     var body: some View {
         ZStack {
@@ -79,7 +157,7 @@ struct MainApp: View {
                     VStack(alignment: .center) {
                         if selectedTab == "Leaf" {
                             VStack {
-                                ProfileInfoView()
+                                ProfileInfoView(userViewModel: userViewModel)
                                     .edgesIgnoringSafeArea(.top)
                                     .padding(.top, -370)
                                     .transition(.opacity)
@@ -104,7 +182,7 @@ struct MainApp: View {
                                 .padding(.horizontal)
                                 .padding(.top,-10)
                                 
-                                NewQuestView(isDarkMode: isDarkMode)
+                                NewQuestView(isDarkMode: isDarkMode, userViewModel: userViewModel)
                                     .transition(.opacity)
                                     .padding(.bottom, 10)
                                 

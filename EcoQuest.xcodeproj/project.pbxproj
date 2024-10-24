@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2E82DEF92CC8A5A700CDBD24 /* MockImagePicker in Frameworks */ = {isa = PBXBuildFile; productRef = 2E82DEF82CC8A5A700CDBD24 /* MockImagePicker */; };
+		2E82DEFC2CC9F4DA00CDBD24 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 2E82DEFB2CC9F4DA00CDBD24 /* ConfettiSwiftUI */; };
 		CA2ACB102CC6BF5C00C97111 /* EcoQuestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB0F2CC6BF5C00C97111 /* EcoQuestApp.swift */; };
 		CA2ACB122CC6BF5C00C97111 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB112CC6BF5C00C97111 /* ContentView.swift */; };
 		CA2ACB142CC6BF5E00C97111 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA2ACB132CC6BF5E00C97111 /* Assets.xcassets */; };
@@ -21,7 +22,6 @@
 		CA2ACB462CC97C8400C97111 /* Impact.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB452CC97C8300C97111 /* Impact.swift */; };
 		CA2ACB482CC97CA500C97111 /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB472CC97CA500C97111 /* Level.swift */; };
 		CA47ED472CC9AE2D0062578B /* EcoQuestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB202CC6BF5F00C97111 /* EcoQuestTests.swift */; };
-		CA47ED4A2CC9B0D30062578B /* UserData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = CA47ED482CC9B0D20062578B /* UserData.xcdatamodeld */; };
 		CA47ED4C2CC9C4C90062578B /* Awards.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA47ED4B2CC9C4C90062578B /* Awards.swift */; };
 /* End PBXBuildFile section */
 
@@ -58,7 +58,6 @@
 		CA2ACB432CC97C4600C97111 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
 		CA2ACB452CC97C8300C97111 /* Impact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Impact.swift; sourceTree = "<group>"; };
 		CA2ACB472CC97CA500C97111 /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
-		CA47ED492CC9B0D30062578B /* UserData.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = UserData.xcdatamodel; sourceTree = "<group>"; };
 		CA47ED4B2CC9C4C90062578B /* Awards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Awards.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -69,6 +68,7 @@
 			files = (
 				CA2ACB3F2CC6E1A600C97111 /* SVGKitSwift in Frameworks */,
 				2E82DEF92CC8A5A700CDBD24 /* MockImagePicker in Frameworks */,
+				2E82DEFC2CC9F4DA00CDBD24 /* ConfettiSwiftUI in Frameworks */,
 				CA2ACB3D2CC6E1A600C97111 /* SVGKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -130,7 +130,6 @@
 				CA2ACB432CC97C4600C97111 /* Camera.swift */,
 				CA2ACB452CC97C8300C97111 /* Impact.swift */,
 				CA2ACB472CC97CA500C97111 /* Level.swift */,
-				CA47ED482CC9B0D20062578B /* UserData.xcdatamodeld */,
 				CA47ED4B2CC9C4C90062578B /* Awards.swift */,
 			);
 			path = EcoQuest;
@@ -181,6 +180,7 @@
 				CA2ACB3C2CC6E1A600C97111 /* SVGKit */,
 				CA2ACB3E2CC6E1A600C97111 /* SVGKitSwift */,
 				2E82DEF82CC8A5A700CDBD24 /* MockImagePicker */,
+				2E82DEFB2CC9F4DA00CDBD24 /* ConfettiSwiftUI */,
 			);
 			productName = EcoQuest;
 			productReference = CA2ACB0C2CC6BF5C00C97111 /* EcoQuest.app */;
@@ -257,6 +257,7 @@
 			packageReferences = (
 				CA2ACB3B2CC6E0AD00C97111 /* XCRemoteSwiftPackageReference "SVGKit" */,
 				2E82DEF62CC8A44100CDBD24 /* XCRemoteSwiftPackageReference "MockImagePicker" */,
+				2E82DEFA2CC9F35B00CDBD24 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
 			);
 			productRefGroup = CA2ACB0D2CC6BF5C00C97111 /* Products */;
 			projectDirPath = "";
@@ -307,7 +308,6 @@
 				CA2ACB422CC97BF100C97111 /* Quests.swift in Sources */,
 				CA2ACB462CC97C8400C97111 /* Impact.swift in Sources */,
 				CA2ACB122CC6BF5C00C97111 /* ContentView.swift in Sources */,
-				CA47ED4A2CC9B0D30062578B /* UserData.xcdatamodeld in Sources */,
 				CA2ACB102CC6BF5C00C97111 /* EcoQuestApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -472,7 +472,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"EcoQuest/Preview Content\"";
-				DEVELOPMENT_TEAM = 8S86J4WV4Y;
+				DEVELOPMENT_TEAM = YNKGXGK378;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EcoQuest/Info.plist;
@@ -489,7 +489,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				NEW_SETTING = "";
-				PRODUCT_BUNDLE_IDENTIFIER = com.appchallenge.EcoQuest;
+				PRODUCT_BUNDLE_IDENTIFIER = com.appchallenge.EcoQuestWarrior;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -507,7 +507,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"EcoQuest/Preview Content\"";
-				DEVELOPMENT_TEAM = 8S86J4WV4Y;
+				DEVELOPMENT_TEAM = YNKGXGK378;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EcoQuest/Info.plist;
@@ -525,7 +525,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				NEW_SETTING = "";
-				PRODUCT_BUNDLE_IDENTIFIER = com.appchallenge.EcoQuest;
+				PRODUCT_BUNDLE_IDENTIFIER = com.appchallenge.EcoQuestWarrior;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -656,6 +656,14 @@
 				minimumVersion = 1.3.0;
 			};
 		};
+		2E82DEFA2CC9F35B00CDBD24 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/simibac/ConfettiSwiftUI";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
 		CA2ACB3B2CC6E0AD00C97111 /* XCRemoteSwiftPackageReference "SVGKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SVGKit/SVGKit";
@@ -672,6 +680,11 @@
 			package = 2E82DEF62CC8A44100CDBD24 /* XCRemoteSwiftPackageReference "MockImagePicker" */;
 			productName = MockImagePicker;
 		};
+		2E82DEFB2CC9F4DA00CDBD24 /* ConfettiSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2E82DEFA2CC9F35B00CDBD24 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
+			productName = ConfettiSwiftUI;
+		};
 		CA2ACB3C2CC6E1A600C97111 /* SVGKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CA2ACB3B2CC6E0AD00C97111 /* XCRemoteSwiftPackageReference "SVGKit" */;
@@ -683,20 +696,6 @@
 			productName = SVGKitSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
-
-/* Begin XCVersionGroup section */
-		CA47ED482CC9B0D20062578B /* UserData.xcdatamodeld */ = {
-			isa = XCVersionGroup;
-			children = (
-				CA47ED492CC9B0D30062578B /* UserData.xcdatamodel */,
-			);
-			currentVersion = CA47ED492CC9B0D30062578B /* UserData.xcdatamodel */;
-			name = UserData.xcdatamodeld;
-			path = /Users/braydenwatt/Downloads/EcoQuestLocal/EcoQuest/UserData.xcdatamodeld;
-			sourceTree = "<group>";
-			versionGroupType = wrapper.xcdatamodel;
-		};
-/* End XCVersionGroup section */
 	};
 	rootObject = CA2ACB042CC6BF5C00C97111 /* Project object */;
 }

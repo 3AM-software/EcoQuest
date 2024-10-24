@@ -36,6 +36,7 @@ struct ProfileInfoView: View {
     @State private var todayPoints: Int = 0
     @State private var totalPoints: Int = 0
     @State private var currentLevel: Level = Level.defaultLevel()
+    @ObservedObject var userViewModel: UserViewModel
     
     var body: some View {
         ZStack {
@@ -85,7 +86,7 @@ struct ProfileInfoView: View {
                                 .frame(width: 24, height: 24)
                                 .foregroundColor(.white)
                             VStack(alignment: .leading) {
-                                Text("\(totalPoints)")
+                                Text("\(userViewModel.totalpoints)")
                                     .font(.title)
                                     .fontWeight(.bold)
                                 Text("Total Points")
