@@ -365,7 +365,7 @@ struct NewQuestView: View {
                 Spacer()
                 
                 Text("+\(quest.points)pts")
-                    .font(.custom("Fredoka", size: 17))
+                    .font(.custom("Fredoka", size: 16))
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
