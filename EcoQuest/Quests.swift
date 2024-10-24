@@ -131,20 +131,21 @@ struct NewQuestView: View {
     @State private var processingQuestId: UUID?
     @State private var showErrorMessage: Bool = false
     @State private var counter: Int = 0
-
-
+    @State private var errorQuestId: UUID?
+    
+    
     init(isDarkMode: Bool, userViewModel: UserViewModel) {
         self.isDarkMode = isDarkMode
         _quests = State(initialValue: [
             NewQuest(title: "Use a reusable water bottle", currActions: userViewModel.bottleActions, maxActions: 1, icon: "drop.fill", iconColor: .blue, completionPrompt: "Does the image contain a reusable water bottle? Please answer using just 'yes' or 'no'.", actionPrompt: "reusableBottle"),
-            NewQuest(title: "Recycle 3 items", currActions: userViewModel.recycleActions, maxActions: 3, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image contain a recyclable item? Please answer using just 'yes' or 'no'.", actionPrompt: "recyclableItem"),
-            NewQuest(title: "Take public transport", currActions: userViewModel.transportAction, maxActions: 5, icon: "bus.fill", iconColor: .green, completionPrompt: "Does the image contain a form of public transport? Please answer using just 'yes' or 'no'.", actionPrompt: "publicTransport"),
+            NewQuest(title: "Recycle items", currActions: userViewModel.recycleActions, maxActions: 5, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image contain a recyclable item? Please answer using just 'yes' or 'no'.", actionPrompt: "recyclableItem"),
+            NewQuest(title: "Take public transport", currActions: userViewModel.transportAction, maxActions: 1, icon: "bus.fill", iconColor: .green, completionPrompt: "Does the image contain a form of public transport? Please answer using just 'yes' or 'no'.", actionPrompt: "publicTransport"),
             NewQuest(title: "Plant a tree", currActions: userViewModel.treeAction, maxActions: 1, icon: "tree.fill", iconColor: .brown, completionPrompt: "Does the image contain a newly planted tree? Please answer using just 'yes' or 'no'.", actionPrompt: "plantTree"),
             NewQuest(title: "Switch off unused lights", currActions: userViewModel.lightAction, maxActions: 4, icon: "lightbulb.fill", iconColor: .yellow, completionPrompt: "Does the image show a light switch being turned off? Please answer using just 'yes' or 'no'.", actionPrompt: "switchLight")
         ])
         self.userViewModel = userViewModel
     }
-
+    
     var body: some View {
         
         ZStack {
@@ -152,7 +153,8 @@ struct NewQuestView: View {
                 quests: $quests,
                 isDarkMode: isDarkMode,
                 processingQuestId: processingQuestId,
-                cameraAction: handleQuestSelection
+                cameraAction: handleQuestSelection,
+                errorQuestId: errorQuestId
             )
             
             .background(ThemeColors.Card.background(isDarkMode))
@@ -168,285 +170,289 @@ struct NewQuestView: View {
             .onChange(of: selectedImage) {
                 processImageSelection(selectedImage)
             }
-            if showErrorMessage {
-                HStack {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.red)
-                        .font(.system(size: 24))
-                    
-                    Text("You didn't meet the quest requirement!")
-                        .foregroundColor(.red)
-                        .fontWeight(.semibold)
-                }
-                .padding()
-                .background(ThemeColors.Card.background(isDarkMode))
-                .cornerRadius(8) // Optional: Add corner radius for rounded edges
-                .shadow(color: .gray.opacity(0.3), radius: 4, x: 0, y: 2) // Optional: Add shadow for better visibility
-            }
-            
         }
         .confettiCannon(counter: $counter)
     }
-
+    
     // MARK: - Helper Methods
-
+    
     private func handleQuestSelection(_ quest: NewQuest) {
         if !quest.isCompleted {
             selectedQuest = quest
             isCameraPresented = true
         }
     }
-
+    
     private func processImageSelection(_ image: UIImage?) {
         guard let image = image, let selectedQuest = selectedQuest else { return }
         let base64Image = encodeImage(image: image)
-
+        
         processingQuestId = selectedQuest.id
         processingImage = true
         isCameraPresented = false
-
+        
         DispatchQueue.global(qos: .userInitiated).async {
             let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt ?? "analyze")
-
+            
             DispatchQueue.main.async {
                 processingImage = false
                 processingQuestId = nil
+                
                 if completed.lowercased().contains("yes"),
                    let index = quests.firstIndex(where: { $0.id == selectedQuest.id }) {
                     withAnimation(.spring()) {
-                        quests[index].currActions+=1
+                        quests[index].currActions += 1
                         userViewModel.addActions(quests[index].actionPrompt)
                         if quests[index].isCompleted {
                             userViewModel.addPoints(quests[index].points)
-                            counter+=1
-
+                            counter += 1
                         }
                     }
-                }
-                else{
+                } else {
                     withAnimation {
+                        errorQuestId = selectedQuest.id
                         showErrorMessage = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             showErrorMessage = false
+                            errorQuestId = nil
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Quest List View
+    
+    struct QuestListView: View {
+        @Binding var quests: [NewQuest]
+        let isDarkMode: Bool
+        let processingQuestId: UUID?
+        let cameraAction: (NewQuest) -> Void
+        let errorQuestId: UUID? // Add this state variable
+        
+        var body: some View {
+            VStack {
+                ForEach(quests.indices, id: \.self) { index in
+                    QuestButton(
+                        quest: quests[index],
+                        isDarkMode: isDarkMode,
+                        isProcessing: processingQuestId == quests[index].id,
+                        showErrorMessage: errorQuestId == quests[index].id,
+                        onTap: { cameraAction(quests[index]) }
+                    )
                     
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Quest List View
-
-struct QuestListView: View {
-    @Binding var quests: [NewQuest]
-    let isDarkMode: Bool
-    let processingQuestId: UUID?
-    let cameraAction: (NewQuest) -> Void
-
-    var body: some View {
-        VStack {
-            ForEach(quests.indices, id: \.self) { index in
-                QuestButton(
-                    quest: quests[index],
-                    isDarkMode: isDarkMode,
-                    isProcessing: processingQuestId == quests[index].id,
-                    onTap: { cameraAction(quests[index]) }
-                )
-
-                if index < quests.count - 1 {
-                    QuestDivider(isDarkMode: isDarkMode)
-                }
-            }
-        }
-        .padding()
-        .padding(.top, -4)
-    }
-}
-
-// MARK: - Quest Button
-
-struct QuestButton: View {
-    let quest: NewQuest
-    let isDarkMode: Bool
-    let isProcessing: Bool
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(alignment: .center, spacing: 16) {
-                QuestIcon(quest: quest)
-
-                VStack(alignment: .leading, spacing: 13) {
-                    QuestTitleAndPoints(quest: quest, isDarkMode: isDarkMode)
-                    QuestProgressBar(quest: quest)
-                }
-
-                if !quest.isCompleted {
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.gray)
-                }
-            }
-            .padding(.vertical, 8)
-            .contentShape(Rectangle())
-            .overlay(
-                Group {
-                    if isProcessing {
-                        LoadingOverlay()
-                            .padding([.leading, .trailing, .bottom], -16)
-                            .padding(.top, -16)
+                    if index < quests.count - 1 {
+                        QuestDivider(isDarkMode: isDarkMode)
                     }
                 }
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-// MARK: - Quest Icon
-
-struct QuestIcon: View {
-    let quest: NewQuest
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(quest.iconColor.opacity(0.15))
-                .frame(width: 48, height: 48)
-
-            Image(systemName: quest.icon)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 24, height: 24)
-                .foregroundColor(quest.iconColor)
+            }
+            .padding()
+            .padding(.top, -4)
         }
     }
-}
-
-// MARK: - Quest Title and Points
-
-struct QuestTitleAndPoints: View {
-    let quest: NewQuest
-    let isDarkMode: Bool
-
-    var body: some View {
-        HStack {
-            Text(quest.title)
-                .font(.body)
-                .fontWeight(.semibold)
-                .foregroundColor(ThemeColors.Content.primary(isDarkMode))
-
-            Spacer()
-
-            Text("+\(quest.points)pts")
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule().fill(quest.isCompleted ? quest.iconColor : Color.gray.opacity(0.8))
+    
+    // MARK: - Quest Button
+    
+    struct QuestButton: View {
+        let quest: NewQuest
+        let isDarkMode: Bool
+        let isProcessing: Bool
+        let showErrorMessage: Bool // Add this parameter
+        let onTap: () -> Void
+        
+        var body: some View {
+            Button(action: onTap) {
+                HStack(alignment: .center, spacing: 16) {
+                    QuestIcon(quest: quest)
+                    
+                    VStack(alignment: .leading, spacing: 13) {
+                        QuestTitleAndPoints(quest: quest, isDarkMode: isDarkMode)
+                        QuestProgressBar(quest: quest)
+                    }
+                    
+                    if !quest.isCompleted {
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
+                .overlay(
+                    Group {
+                        if isProcessing {
+                            LoadingOverlay()
+                                .padding([.leading, .trailing, .bottom], -16)
+                                .padding(.top, -16)
+                        }
+                        if showErrorMessage { // Condition for error message
+                            HStack {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.red)
+                                    .font(.system(size: 24))
+                                
+                                Text("You didn't meet the quest requirement!")
+                                    .foregroundColor(.red)
+                                    .fontWeight(.semibold)
+                            }
+                            .padding()
+                            .background(ThemeColors.Card.background(isDarkMode))
+                            .cornerRadius(8)
+                            .shadow(color: .gray.opacity(0.3), radius: 4, x: 0, y: 2)
+                            .padding(.top, -16) // Adjust padding to align with loading overlay
+                        }
+                    }
                 )
+            }
+            .buttonStyle(PlainButtonStyle())
         }
-        .padding(.top, 10)
     }
-}
-
-// MARK: - Quest Progress Bar
-
-struct QuestProgressBar: View {
-    let quest: NewQuest
-
-    var body: some View {
-        NewProgressBar(
-            currActions: quest.currActions,
-            maxActions: quest.maxActions,
-            color: quest.iconColor
-        )
-        .padding(.bottom, 8)
-    }
-}
-
-// MARK: - Quest Divider
-
-struct QuestDivider: View {
-    let isDarkMode: Bool
-
-    var body: some View {
-        Divider()
-            .frame(height: 2)
-            .overlay(ThemeColors.Content.border(isDarkMode))
-            .padding(.horizontal, -32)
-            .padding(.vertical, 8)
-    }
-}
-
-
-struct LoadingOverlay: View {
-    var body: some View {
-        ZStack {
-            Color.black
-                .opacity(0.7)
-                .ignoresSafeArea(.all)
-            
-            VStack {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .scaleEffect(1.5)
-                    .padding()
+    
+    
+    // MARK: - Quest Icon
+    
+    struct QuestIcon: View {
+        let quest: NewQuest
+        
+        var body: some View {
+            ZStack {
+                Circle()
+                    .fill(quest.iconColor.opacity(0.15))
+                    .frame(width: 48, height: 48)
                 
-                Text("Processing Quest")
-                    .foregroundColor(.white)
-                    .font(.headline)
-                    .padding(.top, 8)
+                Image(systemName: quest.icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+                    .foregroundColor(quest.iconColor)
             }
         }
     }
-}
-
-struct NewProgressBar: View {
-    let currActions: Int
-    let maxActions: Int
-    let color: Color
     
-    private var progress: Float {
-        return maxActions > 0 ? Float(currActions) / Float(maxActions) : 0
-    }
+    // MARK: - Quest Title and Points
     
-    private func textColor(in geometry: GeometryProxy) -> Color {
-        let progressWidth = CGFloat(progress) * geometry.size.width
-        let centerX = geometry.size.width / 2
-        return progressWidth > centerX ? .white : .gray
-    }
-    
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                // Background Rectangle
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 16)
-                    .cornerRadius(8)
-                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
-
-                // Progress Rectangle
-                Rectangle()
-                    .fill(color)
-                    .frame(width: CGFloat(progress) * geometry.size.width, height: 16)
-                    .cornerRadius(8)
-                    .shadow(color: color.opacity(0.3), radius: 2, x: 0, y: -1)
-
-                // Text Overlay
-                Text("\(currActions)/\(maxActions)")
-                    .foregroundColor(textColor(in: geometry))
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
+    struct QuestTitleAndPoints: View {
+        let quest: NewQuest
+        let isDarkMode: Bool
+        
+        var body: some View {
+            HStack {
+                Text(quest.title)
+                    .font(.body)
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeColors.Content.primary(isDarkMode))
+                
+                Spacer()
+                
+                Text("+\(quest.points)pts")
                     .font(.subheadline)
-                    .fontWeight(.bold)
-                    .animation(.easeInOut(duration: 0.2), value: progress)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule().fill(quest.isCompleted ? quest.iconColor : Color.gray.opacity(0.8))
+                    )
+            }
+            .padding(.top, 10)
+        }
+    }
+    
+    // MARK: - Quest Progress Bar
+    
+    struct QuestProgressBar: View {
+        let quest: NewQuest
+        
+        var body: some View {
+            NewProgressBar(
+                currActions: quest.currActions,
+                maxActions: quest.maxActions,
+                color: quest.iconColor
+            )
+            .padding(.bottom, 8)
+        }
+    }
+    
+    // MARK: - Quest Divider
+    
+    struct QuestDivider: View {
+        let isDarkMode: Bool
+        
+        var body: some View {
+            Divider()
+                .frame(height: 2)
+                .overlay(ThemeColors.Content.border(isDarkMode))
+                .padding(.horizontal, -32)
+                .padding(.vertical, 8)
+        }
+    }
+    
+    
+    struct LoadingOverlay: View {
+        var body: some View {
+            ZStack {
+                Color.black
+                    .opacity(0.7)
+                    .ignoresSafeArea(.all)
+                
+                VStack {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.5)
+                        .padding()
+                    
+                    Text("Processing Quest")
+                        .foregroundColor(.white)
+                        .font(.headline)
+                        .padding(.top, 8)
+                }
             }
         }
-        .frame(height: 16)
+    }
+    
+    struct NewProgressBar: View {
+        let currActions: Int
+        let maxActions: Int
+        let color: Color
+        
+        private var progress: Float {
+            return maxActions > 0 ? Float(currActions) / Float(maxActions) : 0
+        }
+        
+        private func textColor(in geometry: GeometryProxy) -> Color {
+            let progressWidth = CGFloat(progress) * geometry.size.width
+            let centerX = geometry.size.width / 2
+            return progressWidth > centerX ? .white : .gray
+        }
+        
+        var body: some View {
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    // Background Rectangle
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 16)
+                        .cornerRadius(8)
+                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                    
+                    // Progress Rectangle
+                    Rectangle()
+                        .fill(color)
+                        .frame(width: CGFloat(progress) * geometry.size.width, height: 16)
+                        .cornerRadius(8)
+                        .shadow(color: color.opacity(0.3), radius: 2, x: 0, y: -1)
+                    
+                    // Text Overlay
+                    Text("\(currActions)/\(maxActions)")
+                        .foregroundColor(textColor(in: geometry))
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .animation(.easeInOut(duration: 0.2), value: progress)
+                }
+            }
+            .frame(height: 16)
+        }
     }
 }
