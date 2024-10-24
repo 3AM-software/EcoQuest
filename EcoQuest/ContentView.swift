@@ -48,13 +48,12 @@ struct ContentView: View {
     var body: some View {
         Group {
             if isLoading {
-                LoadingScreen() // Your loading screen view
+                LoadingScreen()
             } else {
-                MainApp() // Your main app view
+                MainApp()
             }
         }
         .onAppear {
-            // Simulate loading time
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 isLoading = false
             }
@@ -134,20 +133,30 @@ struct MainApp: View {
                             }
                         } else if selectedTab == "Awards" {
                             HStack {
-                                Text("Completed Quests")
+                                Text("Personal Records")
                                     .font(.title3)
                                     .fontWeight(.bold)
                                     .foregroundColor(isDarkMode ? .white : .black)
                                 Spacer()
-                                Text("2 Completed Quests")
-                                    .foregroundColor(.green)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
+                                
                             }
                             .padding(.horizontal)
-                            .padding(.vertical)
-                            AwardsView()
+                            .padding(.top)
+                            RecordsView(isDarkMode: isDarkMode)
                                 .transition(.opacity)
+                                .padding(0)
+                            HStack {
+                                Text("Awards")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(isDarkMode ? .white : .black)
+                                Spacer()
+                                
+                            }
+                            .padding(.horizontal)
+                            AwardsView(isDarkMode: isDarkMode)
+                                .transition(.opacity)
+                                .padding(.bottom)
                         }
                     }
                     .animation(.easeInOut(duration: 0.3), value: selectedTab)
@@ -212,101 +221,6 @@ struct MainApp: View {
         case "Awards": return "medal.fill"
         case "Settings": return "gearshape.fill"
         default: return "leaf"
-        }
-    }
-}
-
-struct UserOverview: View {
-    var totalPoints: Int = 1200 // Example value
-    var streak: Int = 5 // Example value
-    let isDarkMode: Bool
-    
-    init(isDarkMode: Bool){
-        self.isDarkMode = isDarkMode
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                // Rectangle for Total Points
-                VStack(alignment: .center) {
-                    Text("Graph Coming Soon")
-                        .font(.headline)
-                        .padding(.bottom, 2)
-                }
-                .frame(width: 150, height: 100) // Set your desired size
-                .background(Color.white)
-                .cornerRadius(10)
-                .padding(4)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(red:229/255, green:229/255, blue:229/255), lineWidth:2))
-                Spacer()
-            }
-        }
-        .padding()
-        .background(ThemeColors.Card.background(isDarkMode))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 1)
-        )
-        .padding(.horizontal)
-    }
-}
-
-struct UserProfile: View {
-    @State private var showSettings = false
-    let isDarkMode: Bool
-    
-    init(isDarkMode: Bool) {
-        self.isDarkMode = isDarkMode
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading){
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Text("Arco23")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(isDarkMode ? .white : .black)
-                    Spacer()
-                    
-                    Button(action: {
-                        showSettings.toggle() // Show settings when the gear icon is tapped
-                    }) {
-                        HStack {
-                            Image(systemName: "gearshape")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-                        }
-                    }
-                    .sheet(isPresented: $showSettings) {
-                        SettingsView()
-                            .presentationDetents([.medium, .fraction(0.75),.height(700)])
-                    }
-                }
-                
-                HStack {
-                    Text("@Arco23")
-                        .font(.body)
-                        .foregroundColor(.gray)
-                    Spacer()
-                    Text("Joined October 2024")
-                        .font(.body)
-                        .foregroundColor(.gray)
-                }
-            }
-            .padding()
-            .background(ThemeColors.Card.background(isDarkMode))
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 1)
-            )
-            .padding(.horizontal)
         }
     }
 }
@@ -420,8 +334,4 @@ struct LoadingScreen: View {
             }
         }
     }
-}
-
-#Preview {
-    ContentView()
 }

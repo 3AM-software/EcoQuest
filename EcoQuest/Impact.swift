@@ -2,30 +2,36 @@ import SwiftUI
 import UIKit
 
 struct ImpactView: View {
+    @State private var co2: Int = 0
+    @State private var energy: Int = 0
+    @State private var water: Int = 0
+    @State private var waste: Int = 0
+    
+    
     let isDarkMode: Bool
-    // MARK: - Properties
-    let carbonSaved: Int = 2450
-    let energySaved: Int = 384
-    let waterSaved: Int = 1280
-    let wasteReduced: Int = 86
     
-    let co2String: String
-    let energyString: String
-    let waterString: String
-    let wasteString: String
+    var co2String: String {
+        String(co2)
+    }
     
-    // Animation states
+    var energyString: String {
+        String(energy)
+    }
+    
+    var waterString: String {
+        String(water)
+    }
+    
+    var wasteString: String {
+        String(waste)
+    }
+    
     @State private var showCards = false
     @State private var selectedCard: Int? = nil
     @Namespace private var namespace
-    
-    // MARK: - Initialization
+
     init(isDarkMode: Bool) {
         self.isDarkMode = isDarkMode
-        self.co2String = String(carbonSaved)
-        self.energyString = String(energySaved)
-        self.waterString = String(waterSaved)
-        self.wasteString = String(wasteReduced)
     }
     
     // Card data

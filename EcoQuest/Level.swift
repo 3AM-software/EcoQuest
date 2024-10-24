@@ -33,10 +33,9 @@ struct HeaderTitleView: View {
 }
 
 struct ProfileInfoView: View {
-    @State private var levelProgress: Double = 0.7
-    let user: String = "Eco Warrior"
-    let level: Int = 7
-    let points: Int = 1250
+    @State private var todayPoints: Int = 0
+    @State private var totalPoints: Int = 0
+    @State private var currentLevel: Level = Level(title: "Seedling", num: 1, progressToNext: 0.0, pointsToNext: 100)
     
     var body: some View {
         ZStack {
@@ -59,18 +58,23 @@ struct ProfileInfoView: View {
                                 .scaledToFit()
                                 .frame(width: 24, height: 24)
                                 .foregroundColor(.yellow)
-                            Text("Level 12 Warrior")
+                            Text("Level \(currentLevel.num) \(currentLevel.title)")
                                 .font(.title3)
                                 .fontWeight(.bold)
                         }
                         
                         Spacer()
                         
-                        Text("Next: 550 pts")
-                            .font(.subheadline)
+                        if currentLevel.num < 10 {
+                            Text("Next: \(currentLevel.pointsToNext) pts")
+                                .font(.subheadline)
+                        } else {
+                            Text("Max Level")
+                                .font(.subheadline)
+                        }
                     }
                     
-                    LevelProgressBar(progress: levelProgress)
+                    LevelProgressBar(progress: Double(currentLevel.progressToNext))
                     
                     // Points Display
                     HStack {
@@ -78,10 +82,10 @@ struct ProfileInfoView: View {
                             Image(systemName: "star.fill")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width:24,height:24)
+                                .frame(width: 24, height: 24)
                                 .foregroundColor(.white)
                             VStack(alignment: .leading) {
-                                Text("2,450")
+                                Text("\(totalPoints)")
                                     .font(.title)
                                     .fontWeight(.bold)
                                 Text("Total Points")
@@ -91,7 +95,7 @@ struct ProfileInfoView: View {
                         Spacer()
                         
                         VStack(alignment: .trailing) {
-                            Text("+125")
+                            Text("+\(todayPoints)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             Text("Today's Points")
@@ -108,8 +112,6 @@ struct ProfileInfoView: View {
         }
         .foregroundColor(.white)
     }
-    
-    
 }
 
 struct LevelProgressBar: View {
@@ -133,11 +135,14 @@ struct LevelProgressBar: View {
 
 struct StreakBadge: View {
     let isDarkMode: Bool
+    @State private var streak: Int = 0
     
     var body: some View {
         HStack(spacing: 8) {
-            Text("🔥")
-            Text("15 Day Streak!")
+            Image(systemName: "flame.fill")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.orange)
+            Text("\(streak) Day Streak!")
                 .fontWeight(.bold)
                 .foregroundColor(ThemeColors.Content.primary(isDarkMode))
         }
