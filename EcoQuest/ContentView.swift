@@ -79,6 +79,10 @@ class UserViewModel: ObservableObject {
         self.transportAction = UserDefaults.standard.integer(forKey: "publictransport")
         self.treeAction = UserDefaults.standard.integer(forKey: "planttree")
         self.lightAction = UserDefaults.standard.integer(forKey: "switchlight")
+        self.CO2 = UserDefaults.standard.double(forKey: "CO2")
+        self.Energy = UserDefaults.standard.double(forKey: "Energy")
+        self.Water = UserDefaults.standard.double(forKey: "Water")
+        self.Waste = UserDefaults.standard.double(forKey: "Waste")
         checkAndUpdateStreak()
         print("Initial totalPoints:", self.totalpoints)
     }
@@ -127,23 +131,49 @@ class UserViewModel: ObservableObject {
             UserDefaults.standard.set(lightAction, forKey: "switchLight")
         }
     }
+    @Published var CO2: Double {
+        didSet {
+            UserDefaults.standard.set(CO2, forKey: "CO2")
+        }
+    }
+    @Published var Energy: Double {
+        didSet {
+            UserDefaults.standard.set(Energy, forKey: "Energy")
+        }
+    }
+    
+    @Published var Water: Double {
+        didSet {
+            UserDefaults.standard.set(Water, forKey: "Water")
+        }
+    }
+    
+    @Published var Waste: Double {
+        didSet {
+            UserDefaults.standard.set(Waste, forKey: "Waste")
+        }
+    }
+    
 
     func addActions(_ action: String) {
         // Your existing code to increment actions
         if action == "reusableBottle" {
             bottleActions += 1
+            Waste+=
         }
         if action == "recyclableItem" {
             recycleActions += 1
         }
         if action == "publicTransport" {
             transportAction += 1
+            CO2+=1.7
         }
         if action == "plantTree" {
             treeAction += 1
         }
         if action == "switchLight" {
             lightAction += 1
+            Energy+=27
         }
         
         // Update the streak after performing an action
