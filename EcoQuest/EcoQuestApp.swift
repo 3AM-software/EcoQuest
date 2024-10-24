@@ -17,16 +17,16 @@ struct Level: Identifiable, Codable {
     let pointsToNext: Int
     
     static let levelTitles = [
-        1: "Seedling",
-        2: "Sprout",
-        3: "Sapling",
-        4: "Garden Guardian",
-        5: "Earth Defender",
-        6: "Eco Warrior",
-        7: "Planet Protector",
-        8: "Climate Champion",
-        9: "Environmental Elite",
-        10: "Sustainability Sage"
+        1: "Novice",
+        2: "Adept",
+        3: "Fighter",
+        4: "Champion",
+        5: "Defender",
+        6: "Guardian",
+        7: "Warrior",
+        8: "Hero",
+        9: "Sage",
+        10: "Legend"        
     ]
     
     static let pointsPerLevel = [
