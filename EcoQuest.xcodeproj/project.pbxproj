@@ -23,6 +23,7 @@
 		CA2ACB482CC97CA500C97111 /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB472CC97CA500C97111 /* Level.swift */; };
 		CA47ED472CC9AE2D0062578B /* EcoQuestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB202CC6BF5F00C97111 /* EcoQuestTests.swift */; };
 		CA47ED4C2CC9C4C90062578B /* Awards.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA47ED4B2CC9C4C90062578B /* Awards.swift */; };
+		CA67E24A2CCAB57C00ACFB78 /* Ranchers-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +60,7 @@
 		CA2ACB452CC97C8300C97111 /* Impact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Impact.swift; sourceTree = "<group>"; };
 		CA2ACB472CC97CA500C97111 /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		CA47ED4B2CC9C4C90062578B /* Awards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Awards.swift; sourceTree = "<group>"; };
+		CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ranchers-Regular.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +123,7 @@
 		CA2ACB0E2CC6BF5C00C97111 /* EcoQuest */ = {
 			isa = PBXGroup;
 			children = (
+				CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */,
 				CA2ACB402CC9656800C97111 /* Info.plist */,
 				CA2ACB0F2CC6BF5C00C97111 /* EcoQuestApp.swift */,
 				CA2ACB112CC6BF5C00C97111 /* ContentView.swift */,
@@ -277,6 +280,7 @@
 			files = (
 				CA2ACB172CC6BF5E00C97111 /* Preview Assets.xcassets in Resources */,
 				CA2ACB142CC6BF5E00C97111 /* Assets.xcassets in Resources */,
+				CA67E24A2CCAB57C00ACFB78 /* Ranchers-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -17,7 +17,7 @@ struct HeaderTitleView: View {
             .frame(height: 100)
             HStack {
                 Text("EcoQuest")
-                    .font(.system(size: 26))
+                    .font(.custom("Ranchers", size: 28))
                     .tracking(-0.5)
                     .fontWeight(.heavy)
                     .foregroundColor(.white)
@@ -31,8 +31,6 @@ struct HeaderTitleView: View {
         }
     }
 }
-
-import SwiftUI
 
 struct ProfileInfoView: View {
     @ObservedObject var userViewModel: UserViewModel

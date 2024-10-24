@@ -10,7 +10,7 @@ func encodeImage(image: UIImage) -> String {
 }
 
 func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-    let apiKey = "FRICK_YOU_GITHUB"
+    let apiKey = "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"
     let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     
     var request = URLRequest(url: url)
