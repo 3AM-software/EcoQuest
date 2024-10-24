@@ -111,7 +111,7 @@ struct AwardItemView: View {
             Text(text)
                 .font(.system(size: 16))
                 .fontWeight(isUnlocked ? .bold : .regular)
-                .foregroundColor(isUnlocked ? Color.black : Color.gray)
+                .foregroundColor(isUnlocked ? (isDarkMode ? Color.white : Color.black) : Color.gray)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
