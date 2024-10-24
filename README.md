@@ -1,4 +1,7 @@
 <!-- PROJECT LOGO -->
+<!-- Readme Top -->
+<a id="readme-top"></a>
+
 <br />
 <div align="center">
   <a href="https://github.com/your_username/EcoQuest">
@@ -145,11 +148,5 @@ If you have a suggestion that would make this better, please fork the repo and c
   <img src="https://contrib.rocks/image?repo=braydenwatt/EcoQuest" alt="contrib.rocks image" />
 </a>
 
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- LICENSE -->
-## License
-Distributed under the MIT License. See LICENSE.txt for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
