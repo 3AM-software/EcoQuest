@@ -53,31 +53,59 @@ struct RecordCardView: View {
     }
 }
 
+import SwiftUI
+
 struct RecordsView: View {
+    @ObservedObject var userViewModel: UserViewModel
     let isDarkMode: Bool
-    
-    init(isDarkMode: Bool) {
+
+    init(userViewModel: UserViewModel, isDarkMode: Bool) {
+        self.userViewModel = userViewModel
         self.isDarkMode = isDarkMode
     }
-    
-    let records: [Record] = [
-            Record(title: "Highest Streak", icon: "flame.fill", value: "15", date: "Oct 23, 2024", color: .orange),
-            Record(title: "Weekly Quests", icon: "calendar", value: "30", date: "Oct 23, 2024", color: .indigo),
-            Record(title: "Daily Points", icon: "bolt.fill", value: "140", date: "Oct 23, 2024", color: .yellow),
+
+    var records: [Record] {
+        // Create a DateFormatter to format the date for display
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium // Set the date style (short, medium, long, full)
+        dateFormatter.timeStyle = .none // We only want the date, not the time
+
+        return [
+            Record(
+                title: "Highest Streak",
+                icon: "flame.fill",
+                value: String(userViewModel.highStreak),
+                date: userViewModel.dateOfHighestStreak.map { dateFormatter.string(from: $0) } ?? "N/A", // Use the stored date
+                color: .orange
+            ),
+            Record(
+                title: "Daily Points",
+                icon: "bolt.fill",
+                value: String(userViewModel.highestDailyPoints),
+                date: userViewModel.dateOfHighestDailyPoints.map { dateFormatter.string(from: $0) } ?? "N/A", // Use the stored date
+                color: .yellow
+            ),
+            Record(
+                title: "Quests Done",
+                icon: "calendar",
+                value: String(userViewModel.numQuests),
+                date: userViewModel.dateOfNumQuests.map { dateFormatter.string(from: $0) } ?? "N/A", // Use the stored date
+                color: .indigo
+            )
         ]
+    }
 
-        var body: some View {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    ForEach(records) { record in
-                        RecordCardView(record: record, isDarkMode: isDarkMode)
-                    }
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 16) {
+                ForEach(records) { record in
+                    RecordCardView(record: record, isDarkMode: isDarkMode)
                 }
-                .padding()
             }
+            .padding()
         }
+    }
 }
-
 
 struct AwardItemView: View {
     let isUnlocked: Bool
@@ -121,23 +149,25 @@ struct AwardItemView: View {
 }
 
 struct AwardsView: View {
+    @ObservedObject var userViewModel: UserViewModel
     let isDarkMode: Bool
-    
-    // Sample awards data with text
-    let awards = [
-        (icon: "star.fill", text: "First Award", isUnlocked: true, color: Color.yellow),
-        (icon: "flame.fill", text: "On Fire", isUnlocked: true, color: Color.orange),
-        (icon: "bolt.fill", text: "Speed Master", isUnlocked: true, color: Color.blue),
-        (icon: "heart.fill", text: "Well Loved", isUnlocked: true, color: Color.red),
-        (icon: "leaf.fill", text: "Nature Friend", isUnlocked: false, color: Color.green),
-        (icon: "crown.fill", text: "Champion", isUnlocked: false, color: Color.purple)
-    ]
-    
-    init(isDarkMode: Bool) {
+
+    init(userViewModel: UserViewModel, isDarkMode: Bool) {
+        self.userViewModel = userViewModel
         self.isDarkMode = isDarkMode
     }
     
     var body: some View {
+        // Sample awards data with text
+        let awards = [
+            (icon: "star.fill", text: "First Steps", isUnlocked: userViewModel.firstAwardUnlocked, color: Color.yellow),
+            (icon: "flame.fill", text: "On Fire", isUnlocked: false, color: Color.orange),
+            (icon: "shield.fill", text: "Warrior", isUnlocked: false, color: Color.blue),
+            (icon: "leaf.arrow.circlepath", text: "Dedicated", isUnlocked: false, color: Color.red),
+            (icon: "leaf.fill", text: "Nature Friend", isUnlocked: false, color: Color.green),
+            (icon: "crown.fill", text: "Champion", isUnlocked: false, color: Color.purple)
+        ]
+
         ZStack {
             VStack(alignment: .leading, spacing: 16) {
                 LazyVGrid(columns: [

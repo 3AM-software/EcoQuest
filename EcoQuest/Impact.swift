@@ -46,7 +46,7 @@ struct ImpactView: View {
                     detail: """
                     Your carbon savings are making a real difference:
                     • Equivalent to \(userViewModel.trips) car trip(s) avoided
-                    • Equal to planting \(userViewModel.trees) trees
+                    • Equal to planting \((Double)(userViewModel.trips)*0.4) trees
                     
                     Keep up the great work! Your daily choices are helping combat climate change.
                     """
@@ -61,7 +61,7 @@ struct ImpactView: View {
                     title: "Energy Saved",
                     detail: """
                     Your energy conservation efforts:
-                    • Powered 1 home(s) for a day
+                    • Powered \(userViewModel.energy/30) home(s) for a day
                     • Saved \(userViewModel.energy) kWh of electricity
                     • Reduced peak grid demand
                     
@@ -79,7 +79,7 @@ struct ImpactView: View {
                     detail: """
                     Your bottle conservation impact:
                     • Saved \(userViewModel.bottles) glass(es) of water
-                    • Equivalent to 32 full bathtubs
+                    • Equivalent to \((Float)(userViewModel.bottles)/300) bathtubs
                     • Protected vital water resources
                     
                     Every drop counts in preserving our planet's most precious resource.
@@ -95,8 +95,8 @@ struct ImpactView: View {
                     title: "Waste Reduced",
                     detail: """
                     Your waste reduction achievements:
-                    • Prevented 430 plastic bags from landfills
-                    • Recycled 86 kg of materials
+                    • Prevented \(userViewModel.waste*3) plastic bags from landfills
+                    • Recycled \(userViewModel.waste) kg of materials
                     • Saved valuable landfill space
                     
                     Your efforts help create a cleaner, more sustainable future.

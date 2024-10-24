@@ -43,6 +43,9 @@ struct ThemeColors {
 }
 
 class UserViewModel: ObservableObject {
+    @Published var showAwardPopup = false
+    @Published var awardNum = 0
+
     @Published var totalpoints: Int {
         didSet {
             UserDefaults.standard.set(totalpoints, forKey: "totalPoints")
@@ -51,13 +54,19 @@ class UserViewModel: ObservableObject {
     
     @Published var todaypoints: Int {
         didSet {
-            UserDefaults.standard.set(totalpoints, forKey: "todayPoints")
+            UserDefaults.standard.set(todaypoints, forKey: "todayPoints")
         }
     }
 
     @Published var streak: Int {
         didSet {
             UserDefaults.standard.set(streak, forKey: "streak")
+        }
+    }
+    
+    @Published var highStreak: Int {
+        didSet {
+            UserDefaults.standard.set(highStreak, forKey: "hStreak")
         }
     }
     
@@ -81,7 +90,7 @@ class UserViewModel: ObservableObject {
 
     @Published var bottles: Int {
         didSet {
-            UserDefaults.standard.set(totalpoints, forKey: "bottles")
+            UserDefaults.standard.set(bottles, forKey: "bottles")
         }
     }
     
@@ -102,25 +111,102 @@ class UserViewModel: ObservableObject {
             UserDefaults.standard.set(trees, forKey: "trees")
         }
     }
+
+    @Published var highestWeeklyQuests: Int {
+        didSet {
+            UserDefaults.standard.set(highestWeeklyQuests, forKey: "hQuests")
+        }
+    }
     
+    @Published var highestDailyPoints: Int {
+        didSet {
+            UserDefaults.standard.set(highestDailyPoints, forKey: "hPoints")
+        }
+    }
+    
+    @Published var dateOfHighestDailyPoints: Date? {
+        didSet {
+            UserDefaults.standard.set(dateOfHighestDailyPoints, forKey: "dateOfHighestDailyPoints")
+        }
+    }
+    
+    @Published var dateOfHighestStreak: Date? {
+        didSet {
+            UserDefaults.standard.set(dateOfHighestStreak, forKey: "dateOfHighestStreak")
+        }
+    }
+    
+    @Published var bottleActions: Int {
+        didSet {
+            UserDefaults.standard.set(bottleActions, forKey: "reusableBottle")
+        }
+    }
+    
+    @Published var recycleActions: Int {
+        didSet {
+            UserDefaults.standard.set(recycleActions, forKey: "recyclableItem")
+        }
+    }
+    
+    @Published var transportAction: Int {
+        didSet {
+            UserDefaults.standard.set(transportAction, forKey: "publicTransport")
+        }
+    }
+    
+    @Published var treeAction: Int {
+        didSet {
+            UserDefaults.standard.set(treeAction, forKey: "plantTree")
+        }
+    }
+    
+    @Published var lightAction: Int {
+        didSet {
+            UserDefaults.standard.set(lightAction, forKey: "switchLight")
+        }
+    }
+    
+    @Published var numQuests: Int {
+        didSet {
+            UserDefaults.standard.set(numQuests, forKey: "numQuests")
+        }
+    }
+    
+    @Published var dateOfNumQuests: Date? {
+        didSet {
+            UserDefaults.standard.set(dateOfNumQuests, forKey: "dateOfNumQuests")
+        }
+    }
+    @Published var firstAwardUnlocked: Bool = false {
+            didSet {
+                UserDefaults.standard.set(firstAwardUnlocked, forKey: "firstAwardUnlocked")
+            }
+        }
+
     init() {
-        self.totalpoints = UserDefaults.standard.integer(forKey: "totalpoints")
-        self.todaypoints = UserDefaults.standard.integer(forKey: "todaypoints")
-        self.trees = UserDefaults.standard.integer(forKey: "trees")
-        self.trips = UserDefaults.standard.integer(forKey: "trips")
+        self.totalpoints = UserDefaults.standard.integer(forKey: "totalPoints")
+        self.todaypoints = UserDefaults.standard.integer(forKey: "todayPoints")
         self.streak = UserDefaults.standard.integer(forKey: "streak")
+        self.highStreak = UserDefaults.standard.integer(forKey: "hStreak")
         self.lastActionDate = UserDefaults.standard.object(forKey: "lastActionDate") as? Date ?? Date()
         self.co2 = UserDefaults.standard.integer(forKey: "co2")
+        self.firstAwardUnlocked = UserDefaults.standard.bool(forKey: "firstAwardUnlocked")
         self.energy = UserDefaults.standard.integer(forKey: "energy")
         self.waste = UserDefaults.standard.float(forKey: "waste")
         self.bottles = UserDefaults.standard.integer(forKey: "bottles")
-        self.bottleActions = UserDefaults.standard.integer(forKey: "reusablebottle")
-        self.recycleActions = UserDefaults.standard.integer(forKey: "recyclableitem")
-        self.transportAction = UserDefaults.standard.integer(forKey: "publictransport")
-        self.treeAction = UserDefaults.standard.integer(forKey: "planttree")
-        self.lightAction = UserDefaults.standard.integer(forKey: "switchlight")
-        checkAndUpdateStreak()
-        print("Initial totalPoints:", self.totalpoints)
+        self.bottleActions = UserDefaults.standard.integer(forKey: "reusableBottle")
+        self.recycleActions = UserDefaults.standard.integer(forKey: "recyclableItem")
+        self.transportAction = UserDefaults.standard.integer(forKey: "publicTransport")
+        self.treeAction = UserDefaults.standard.integer(forKey: "plantTree")
+        self.lightAction = UserDefaults.standard.integer(forKey: "switchLight")
+        self.highestWeeklyQuests = UserDefaults.standard.integer(forKey: "hQuests")
+        self.highestDailyPoints = UserDefaults.standard.integer(forKey: "hPoints")
+        self.dateOfHighestDailyPoints = UserDefaults.standard.object(forKey: "dateOfHighestDailyPoints") as? Date
+        self.dateOfHighestStreak = UserDefaults.standard.object(forKey: "dateOfHighestStreak") as? Date
+        self.dateOfNumQuests = UserDefaults.standard.object(forKey: "dateOfNumQuests") as? Date
+        self.numQuests = UserDefaults.standard.integer(forKey: "numQuests")
+        self.trees = UserDefaults.standard.integer(forKey: "trees")
+        self.trips = UserDefaults.standard.integer(forKey: "trips")
     }
     
     func checkAndUpdateStreak() {
@@ -128,44 +214,51 @@ class UserViewModel: ObservableObject {
         if calendar.isDateInYesterday(lastActionDate) {
             // If the last action date was yesterday, continue the streak
             incrementStreak()
+            if streak > highStreak {
+                setHighestStreak(streak)
+                dateOfHighestStreak = Date()
+            }
         } else if !calendar.isDateInToday(lastActionDate) {
             // If the last action date wasn't today or yesterday, reset the streak
             resetStreak()
         }
     }
-    
+
+    func setHighestStreak(_ high: Int) {
+        highStreak = high
+    }
+
+    func setHighestDailyPoints(_ high: Int) {
+        highestDailyPoints = high
+    }
 
     func addPoints(_ pointsToAdd: Int) {
+        
         totalpoints += pointsToAdd
         todaypoints += pointsToAdd
+        if todaypoints > highestDailyPoints {
+            setHighestDailyPoints(todaypoints)
+            dateOfHighestDailyPoints = Date()
+        }
+        numQuests += 1
+        dateOfNumQuests = Date()
+        if !firstAwardUnlocked && totalpoints >= 1 {
+            firstAwardUnlocked = true
+            withAnimation {
+                showAwardPopupWithDelay()
+            }
+            awardNum = 0
+        }
     }
+    
+    func showAwardPopupWithDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            self.showAwardPopup = true
+        }
+    }
+
     func resetPoints() {
         todaypoints = 0
-    }
-    @Published var bottleActions: Int {
-        didSet {
-            UserDefaults.standard.set(bottleActions, forKey: "reusableBottle")
-        }
-    }
-    @Published var recycleActions: Int {
-        didSet {
-            UserDefaults.standard.set(recycleActions, forKey: "recyclableItem")
-        }
-    }
-    @Published var transportAction: Int {
-        didSet {
-            UserDefaults.standard.set(transportAction, forKey: "publicTransport")
-        }
-    }
-    @Published var treeAction: Int {
-        didSet {
-            UserDefaults.standard.set(treeAction, forKey: "plantTree")
-        }
-    }
-    @Published var lightAction: Int {
-        didSet {
-            UserDefaults.standard.set(lightAction, forKey: "switchLight")
-        }
     }
 
     func addActions(_ action: String) {
@@ -173,22 +266,18 @@ class UserViewModel: ObservableObject {
         if action == "reusableBottle" {
             bottleActions += 1
             bottles += 2
-        }
-        if action == "recyclableItem" {
+        } else if action == "recyclableItem" {
             recycleActions += 1
             waste += 0.15
-        }
-        if action == "publicTransport" {
+        } else if action == "publicTransport" {
             transportAction += 1
             co2 += 9
             trips += 1
-        }
-        if action == "plantTree" {
+        } else if action == "plantTree" {
             treeAction += 1
             co2 += 1
             trees += 1
-        }
-        if action == "switchLight" {
+        } else if action == "switchLight" {
             lightAction += 1
             energy += 1
         }
@@ -217,12 +306,122 @@ class UserViewModel: ObservableObject {
         lightAction = 0
     }
     
+    func resetAll() {
+        totalpoints = 0
+        todaypoints = 0
+        streak = 0
+        highStreak = 0
+        co2 = 0
+        trees = 0
+        energy = 0
+        trips = 0
+        waste = 0
+        bottles = 0
+        resetActions()
+        dateOfHighestDailyPoints = nil
+        dateOfHighestStreak = nil
+        dateOfNumQuests = nil
+        numQuests = 0
+    }
+
     func incrementStreak() {
-            streak += 1
+        streak += 1
     }
 
     func resetStreak() {
         streak = 0
+    }
+}
+
+struct AwardPopupView: View {
+    @Binding var isPresented: Bool
+    let title: String
+    let message: String
+    let awardNum: Int
+    let isDarkMode: Bool
+    
+    var body: some View {
+        
+        let awards = [
+            (icon: "star.fill", text: "First Steps", color: Color.yellow),
+            (icon: "flame.fill", text: "On Fire", color: Color.orange),
+            (icon: "shield.fill", text: "Warrior", color: Color.blue),
+            (icon: "leaf.arrow.circlepath", text: "Dedicated", color: Color.red),
+            (icon: "leaf.fill", text: "Nature Friend", color: Color.green),
+            (icon: "crown.fill", text: "Champion", color: Color.purple)
+        ]
+        
+        ZStack {
+            // Semi-transparent background
+            Color.black.opacity(0.4)
+                .edgesIgnoringSafeArea(.all)
+            
+            // Popup content
+            VStack(spacing: 20) {
+                // Trophy image
+                ZStack {
+                    // Background rectangle
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(awards[awardNum].color.opacity(0.2))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(awards[awardNum].color, lineWidth: 2)
+                        )
+                        .frame(width: 65, height: 65)
+                        .rotationEffect(.degrees(45))
+                    
+                    // Icon
+                    Image(systemName: awards[awardNum].icon)
+                        .font(.system(size: 24))
+                        .foregroundColor(awards[awardNum].color)
+                }
+                .frame(width: 80, height: 80) // Larger frame to accommodate rotation
+                .padding(.bottom,4)
+                
+                // Title
+                Text(title)
+                    .font(.title)
+                    .fontWeight(.bold)
+                
+                // Message
+                Text("You have unlocked the \(awards[awardNum].text) award!")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+                
+                // Celebration effects
+                HStack(spacing: 15) {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(awards[awardNum].color)
+                    Image(systemName: "star.fill")
+                        .foregroundColor(awards[awardNum].color)
+                    Image(systemName: "star.fill")
+                        .foregroundColor(awards[awardNum].color)
+                }
+                
+                // Close button
+                Button(action: {
+                    withAnimation {
+                        isPresented = false
+                    }
+                }) {
+                    Text("Continue")
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(width: 200)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                }
+            }
+            .padding(30)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(ThemeColors.Card.background(isDarkMode))
+                    .shadow(radius: 10)
+            )
+            .padding(40)
+            .transition(.scale)
+        }
     }
 }
 
@@ -245,6 +444,7 @@ struct ContentView: View {
 }
 
 struct MainApp: View {
+
     @State private var showSettings = false
     @State private var selectedTab: String = "Leaf"
     @AppStorage("isDarkMode") private var isDarkMode = false
@@ -254,6 +454,8 @@ struct MainApp: View {
     @State private var lastRunDate: Date = Date.distantPast
     @State private var countdown: String = "24:00" // To hold the countdown string
     @State private var timer: Timer?
+    @State private var popupOpacity = 0.0
+    @State private var popupScale = 0.8
 
     var body: some View {
         ZStack {
@@ -283,7 +485,7 @@ struct MainApp: View {
                                     Image(systemName: "clock")
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.orange)
-                                        
+                                    
                                     Text(countdown)
                                         .font(.subheadline)
                                         .foregroundColor(.orange)
@@ -329,7 +531,7 @@ struct MainApp: View {
                             }
                             .padding(.horizontal)
                             .padding(.top)
-                            RecordsView(isDarkMode: isDarkMode)
+                            RecordsView(userViewModel: userViewModel, isDarkMode: isDarkMode)
                                 .transition(.opacity)
                                 .padding(0)
                             HStack {
@@ -341,26 +543,43 @@ struct MainApp: View {
                                 
                             }
                             .padding(.horizontal)
-                            AwardsView(isDarkMode: isDarkMode)
+                            AwardsView(userViewModel: userViewModel, isDarkMode: isDarkMode)
                                 .transition(.opacity)
                                 .padding(.bottom)
                         }
                     }
                     .animation(.easeInOut(duration: 0.3), value: selectedTab)
                 }
-                
                 bottomNavBar
             }
             .edgesIgnoringSafeArea(.all)
             .onAppear {
-                            updateCountdown()
-                            checkAndPerformDailyTask()
-                            startTimer()
-                            startChecker()
+                    updateCountdown()
+                    checkAndPerformDailyTask()
+                    startTimer()
+                    startChecker()
+                }
+                .onDisappear {
+                    timer?.invalidate() // Stop the timer when the view disappears
+                }
+            if userViewModel.showAwardPopup {
+                AwardPopupView(isPresented: $userViewModel.showAwardPopup,
+                               title: "Congratulations!",
+                               message: "You unlocked an award!",
+                               awardNum: userViewModel.awardNum,
+                               isDarkMode: isDarkMode)
+                    .opacity(popupOpacity)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            popupOpacity = 1.0
                         }
-                        .onDisappear {
-                            timer?.invalidate() // Stop the timer when the view disappears
-                        }
+                    }
+                    .onDisappear {
+                        // Reset values if needed
+                        popupOpacity = 0.0
+                        popupScale = 0.8
+                    }
+            }
         }
     }
     
