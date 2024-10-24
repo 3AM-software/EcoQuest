@@ -186,13 +186,8 @@ struct NewQuestView: View {
     private func processImageSelection(_ image: UIImage?) {
         guard let image = image, let selectedQuest = selectedQuest else { return }
 
-        // Skip processing in DEBUG mode
-        #if DEBUG
-        completeQuestManually(for: selectedQuest)
-        return
-        #endif
-
         let base64Image = encodeImage(image: image)
+        print(base64Image)
         processingQuestId = selectedQuest.id
         processingImage = true
         isCameraPresented = false

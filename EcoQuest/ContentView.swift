@@ -554,14 +554,15 @@ struct MainApp: View {
             }
             .edgesIgnoringSafeArea(.all)
             .onAppear {
-                    updateCountdown()
-                    checkAndPerformDailyTask()
-                    startTimer()
-                    startChecker()
-                }
-                .onDisappear {
-                    timer?.invalidate() // Stop the timer when the view disappears
-                }
+                //userViewModel.resetAll()
+                updateCountdown()
+                checkAndPerformDailyTask()
+                startTimer()
+                startChecker()
+            }
+            .onDisappear {
+                timer?.invalidate() // Stop the timer when the view disappears
+            }
             if userViewModel.showAwardPopup {
                 AwardPopupView(isPresented: $userViewModel.showAwardPopup,
                                title: "Congratulations!",
