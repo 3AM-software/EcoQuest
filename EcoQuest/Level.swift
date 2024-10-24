@@ -35,7 +35,7 @@ struct HeaderTitleView: View {
 struct ProfileInfoView: View {
     @State private var todayPoints: Int = 0
     @State private var totalPoints: Int = 0
-    @State private var currentLevel: Level = Level(title: "Seedling", num: 1, progressToNext: 0.0, pointsToNext: 100)
+    @State private var currentLevel: Level = Level.defaultLevel()
     
     var body: some View {
         ZStack {

@@ -26,7 +26,7 @@ struct Level: Identifiable, Codable {
         7: "Warrior",
         8: "Hero",
         9: "Sage",
-        10: "Legend"        
+        10: "Legend"
     ]
     
     static let pointsPerLevel = [
@@ -81,7 +81,7 @@ struct Level: Identifiable, Codable {
     }
     
     static func defaultLevel() -> Level {
-        Level(title: "Seedling", num: 1, progressToNext: 0.0, pointsToNext: 100)
+        Level(title: "Novice", num: 1, progressToNext: 0.0, pointsToNext: 100)
     }
 }
 
