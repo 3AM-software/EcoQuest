@@ -117,8 +117,6 @@ class UserViewModel: ObservableObject {
     }
 }
 
-
-
 struct ContentView: View {
     @State private var isLoading = true
     var body: some View {
@@ -143,8 +141,10 @@ struct MainApp: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var selectedDetent: PresentationDetent = .height(700)
     @StateObject private var userViewModel = UserViewModel()
-
     
+    @State private var lastRunDate: Date = Date.distantPast
+    @State private var countdown: String = "24:00" // To hold the countdown string
+    @State private var timer: Timer?
     var body: some View {
         ZStack {
             ThemeColors.Background.primary(isDarkMode)
@@ -174,13 +174,13 @@ struct MainApp: View {
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.orange)
                                         
-                                    Text("24 hours")
+                                    Text(countdown) // Display countdown
                                         .font(.subheadline)
                                         .foregroundColor(.orange)
                                         .fontWeight(.medium)
                                 }
                                 .padding(.horizontal)
-                                .padding(.top,-10)
+                                .padding(.top, -10)
                                 
                                 NewQuestView(isDarkMode: isDarkMode, userViewModel: userViewModel)
                                     .transition(.opacity)
@@ -216,7 +216,6 @@ struct MainApp: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(isDarkMode ? .white : .black)
                                 Spacer()
-                                
                             }
                             .padding(.horizontal)
                             .padding(.top)
@@ -229,7 +228,6 @@ struct MainApp: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(isDarkMode ? .white : .black)
                                 Spacer()
-                                
                             }
                             .padding(.horizontal)
                             AwardsView(isDarkMode: isDarkMode)
@@ -243,6 +241,15 @@ struct MainApp: View {
                 bottomNavBar
             }
             .edgesIgnoringSafeArea(.all)
+            .onAppear {
+                updateCountdown()
+                checkAndPerformDailyTask()
+                startTimer()
+                startChecker()
+            }
+            .onDisappear {
+                timer?.invalidate() // Stop the timer when the view disappears
+            }
         }
     }
     
@@ -290,6 +297,53 @@ struct MainApp: View {
                 .foregroundColor(.gray.opacity(0.2)),
             alignment: .top
         )
+
+    }
+    
+    private func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
+            updateCountdown()
+        }
+    }
+    
+    private func startChecker() {
+        timer = Timer.scheduledTimer(withTimeInterval: 60*60, repeats: true) { _ in
+            checkAndPerformDailyTask()
+        }
+    }
+
+    private func updateCountdown() {
+        let calendar = Calendar.current
+        let now = Date()
+        let midnight = calendar.nextDate(after: now, matching: DateComponents(hour: 0, minute: 0), matchingPolicy: .nextTime)!
+        
+        let timeInterval = midnight.timeIntervalSince(now)
+        let hours = Int(timeInterval) / 3600
+        let minutes = (Int(timeInterval) % 3600) / 60
+        
+        countdown = String(format: "%02d:%02d", hours, minutes) // Update countdown string
+    }
+
+    private func checkAndPerformDailyTask() {
+        let userDefaults = UserDefaults.standard
+        let currentDate = Date()
+        
+        // Retrieve last run date from UserDefaults
+        if let savedDate = userDefaults.object(forKey: "lastPointsResetDate") as? Date {
+            lastRunDate = savedDate
+        }
+
+        // Compare current date with last run date
+        let calendar = Calendar.current
+        if !calendar.isDate(lastRunDate, inSameDayAs: currentDate) {
+            performDailyFunction()  // Call your function here
+            userDefaults.set(currentDate, forKey: "lastPointsResetDate")  // Update last run date
+        }
+    }
+
+    private func performDailyFunction() {
+        // Your logic to reset points or other daily tasks
+        userViewModel.resetActions()
     }
     
     // Helper function for system icons
@@ -323,7 +377,6 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarItems(trailing: Button("Done") { dismiss() })
             .preferredColorScheme(isDarkMode ? .dark : .light)
-            
         }
     }
 }
