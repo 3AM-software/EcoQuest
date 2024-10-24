@@ -101,14 +101,6 @@ open EcoQuest.xcworkspace
 ```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- USAGE EXAMPLES -->
-## Usage
-Use this space to show useful examples of how a project can be used. For instance, how to complete daily challenges, track progress, or view the impact dashboard. Additional screenshots and demos work well in this space.
-
-For more examples, please refer to the Documentation.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 <!-- ROADMAP -->
 ## Roadmap
 
