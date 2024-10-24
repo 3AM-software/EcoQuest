@@ -254,19 +254,19 @@ struct OpaqueCompactCardView: View {
 
                     HStack {
                         Text(value)
-                            .font(.system(size: 28))
-                            .tracking(-0.5)
+                            .font(.custom("Fredoka", size: 28))
                             .fontWeight(.heavy)
                             .foregroundColor(card.text)
                         Text(unit)
-                            .font(.system(size: 16))
+                            .font(.custom("Fredoka", size: 16))
                             .fontWeight(.medium)
                             .foregroundColor(card.text)
                     }
                     .foregroundColor(.white)
 
                     Text(card.title)
-                        .font(.subheadline)
+                        .font(.custom("Fredoka", size: 16))
+                        .fontWeight(.medium)
                         .foregroundColor(card.text)
                         .opacity(0.8)
                 }
@@ -305,17 +305,18 @@ struct ExpandedCardView: View {
             
             HStack(alignment: .firstTextBaseline) {
                 Text(value)
-                    .font(.system(size: 48))
+                    .font(.custom("Fredoka", size: 48))
                     .fontWeight(.heavy)
                 Text(unit)
-                    .font(.title2)
+                    .font(.custom("Fredoka", size: 24))
                     .fontWeight(.medium)
             }
             .foregroundColor(.white)
             
             
             Text(card.detail)
-                .font(.body)
+                .font(.custom("Fredoka", size: 17))
+                .fontWeight(.medium)
                 .foregroundColor(.white)
 
                 .multilineTextAlignment(.leading)

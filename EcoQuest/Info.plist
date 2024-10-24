@@ -9,6 +9,8 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>Ranchers-Regular.ttf</string>
+		<string>Fredoka-VariableFont_wdth,wght.ttf</string>
+		<string>Comfortaa-Medium.ttf</string>
 	</array>
 </dict>
 </plist>

@@ -3,6 +3,7 @@ import Foundation
 import UIKit
 import AVFoundation
 import Combine
+import ConfettiSwiftUI
 
 #if targetEnvironment(simulator)
 import MockImagePicker
@@ -445,7 +446,8 @@ struct LoadingOverlay: View {
                 // Loading message
                 Text("Processing Quest")
                     .foregroundColor(isDarkMode ? .white : .black)
-                    .font(.headline)
+                    .font(.custom("Fredoka", size: 20))
+                    .fontWeight(.semibold)
                     .padding(.top, 8)
             }
             .padding(30)
@@ -476,6 +478,7 @@ struct ErrorOverlay: View {
                 
                 Text("You didn't meet the quest requirement!")
                     .foregroundColor(.red)
+                    .font(.custom("Fredoka", size: 20))
                     .fontWeight(.semibold)
             }
             .padding(30)
@@ -523,7 +526,9 @@ struct MainApp: View {
     @State private var popupOpacity = 0.0
     @State private var popupScale = 0.8
 
+
     var body: some View {
+        @State var counter: Int = globalState.counter
         ZStack {
             ThemeColors.Background.primary(isDarkMode)
                 .ignoresSafeArea()
@@ -544,8 +549,8 @@ struct MainApp: View {
                                 
                                 HStack {
                                     Text("Daily Quests")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
+                                        .font(.custom("Fredoka", size: 24))
+                                        .fontWeight(.semibold)
                                         .foregroundColor(isDarkMode ? .white : .black)
                                     Spacer()
                                     Image(systemName: "clock")
@@ -553,7 +558,7 @@ struct MainApp: View {
                                         .foregroundColor(.orange)
                                     
                                     Text(countdown)
-                                        .font(.subheadline)
+                                        .font(.custom("Fredoka",size:16))
                                         .foregroundColor(.orange)
                                         .fontWeight(.medium)
                                 }
@@ -566,8 +571,8 @@ struct MainApp: View {
                                 
                                 HStack {
                                     Text("Your Impact")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
+                                        .font(.custom("Fredoka", size: 24))
+                                        .fontWeight(.semibold)
                                         .foregroundColor(isDarkMode ? .white : .black)
                                     Spacer()
                                     Menu {
@@ -576,7 +581,7 @@ struct MainApp: View {
                                         Button("This Year", action: {})
                                     } label: {
                                         Text("This Month")
-                                            .font(.subheadline)
+                                            .font(.custom("Fredoka",size:16))
                                             .foregroundColor(.gray)
                                             .fontWeight(.medium)
                                     }
@@ -589,8 +594,8 @@ struct MainApp: View {
                         } else if selectedTab == "Awards" {
                             HStack {
                                 Text("Personal Records")
-                                    .font(.title3)
-                                    .fontWeight(.bold)
+                                    .font(.custom("Fredoka", size: 24))
+                                    .fontWeight(.semibold)
                                     .foregroundColor(isDarkMode ? .white : .black)
                                 Spacer()
                                 
@@ -602,8 +607,8 @@ struct MainApp: View {
                                 .padding(0)
                             HStack {
                                 Text("Awards")
-                                    .font(.title3)
-                                    .fontWeight(.bold)
+                                    .font(.custom("Fredoka", size: 24))
+                                    .fontWeight(.semibold)
                                     .foregroundColor(isDarkMode ? .white : .black)
                                 Spacer()
                                 
@@ -620,14 +625,15 @@ struct MainApp: View {
             }
             .edgesIgnoringSafeArea(.all)
             .onAppear {
-                    updateCountdown()
-                    checkAndPerformDailyTask()
-                    startTimer()
-                    startChecker()
-                }
-                .onDisappear {
-                    timer?.invalidate() // Stop the timer when the view disappears
-                }
+                //userViewModel.resetAll()
+                updateCountdown()
+                checkAndPerformDailyTask()
+                startTimer()
+                startChecker()
+            }
+            .onDisappear {
+                timer?.invalidate() // Stop the timer when the view disappears
+            }
             if userViewModel.showAwardPopup {
                 AwardPopupView(isPresented: $userViewModel.showAwardPopup,
                                title: "Congratulations!",
@@ -675,6 +681,7 @@ struct MainApp: View {
                     }
             }
         }
+        .confettiCannon(counter: $counter)
     }
     
     private func startTimer() {
@@ -842,11 +849,13 @@ struct LoadingScreen: View {
                 // Eco Tip Card
                 VStack {
                     Text("🌿 Did You Know?")
-                        .font(.headline)
+                        .font(.custom("Fredoka", size: 20))
+                        .fontWeight(.semibold)
                         .foregroundColor(.white)
 
                     Text("Bamboo grows up to 35 inches per day, making it one of the most sustainable building materials on Earth. Using bamboo products helps reduce deforestation!")
-                        .font(.subheadline)
+                        .font(.custom("Fredoka", size: 16))
+                        .fontWeight(.medium)
                         .foregroundColor(.white.opacity(0.9))
                         .multilineTextAlignment(.center)
                         .padding(10)
@@ -870,7 +879,8 @@ struct LoadingScreen: View {
                 .padding(.bottom, 10)
 
                 Text("Loading your eco journey...")
-                    .font(.subheadline)
+                    .font(.custom("Fredoka", size: 18))
+                    .fontWeight(.medium)
                     .foregroundColor(.white)
             }
             .padding()

@@ -122,6 +122,7 @@ class GlobalState: ObservableObject {
     
     @Published var processingImage: Bool = false
     @Published var showErrorMessage: Bool = false
+    @Published var counter: Int = 0
     
     private init() {}
 }
@@ -137,7 +138,6 @@ struct NewQuestView: View {
     @State private var processingImage: Bool = false
     @State private var processingQuestId: UUID?
     @State private var showErrorMessage: Bool = false
-    @State private var counter: Int = 0
     @State private var errorQuestId: UUID?
     
     
@@ -178,7 +178,6 @@ struct NewQuestView: View {
                 processImageSelection(selectedImage)
             }
         }
-        .confettiCannon(counter: $counter)
     }
     
     // MARK: - Helper Methods
@@ -213,7 +212,7 @@ struct NewQuestView: View {
                         userViewModel.addActions(quests[index].actionPrompt)
                         if quests[index].isCompleted {
                             userViewModel.addPoints(quests[index].points)
-                            counter += 1
+                            globalState.counter += 1
                         }
                     }
                 } else {
@@ -229,13 +228,15 @@ struct NewQuestView: View {
     }
 
     private func completeQuestManually(for quest: NewQuest) {
+        @ObservedObject var globalState = GlobalState.shared
+        
         if let index = quests.firstIndex(where: { $0.id == quest.id }) {
             withAnimation(.spring()) {
                 quests[index].currActions += 1
                 userViewModel.addActions(quests[index].actionPrompt)
                 if quests[index].isCompleted {
                     userViewModel.addPoints(quests[index].points)
-                    counter += 1
+                    globalState.counter += 1
                 }
             }
         }
@@ -357,14 +358,14 @@ struct NewQuestView: View {
         var body: some View {
             HStack {
                 Text(quest.title)
-                    .font(.body)
+                    .font(.custom("Fredoka", fixedSize: 18))
                     .fontWeight(.semibold)
                     .foregroundColor(ThemeColors.Content.primary(isDarkMode))
                 
                 Spacer()
                 
                 Text("+\(quest.points)pts")
-                    .font(.subheadline)
+                    .font(.custom("Fredoka", size: 17))
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
@@ -422,7 +423,8 @@ struct NewQuestView: View {
                     
                     Text("Processing Quest")
                         .foregroundColor(.white)
-                        .font(.headline)
+                        .font(.custom("Fredoka", size: 20))
+                        .fontWeight(.medium)
                         .padding(.top, 8)
                 }
             }
@@ -466,7 +468,7 @@ struct NewQuestView: View {
                         .foregroundColor(textColor(in: geometry))
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
-                        .font(.subheadline)
+                        .font(.custom("Fredoka", size: 16))
                         .fontWeight(.bold)
                         .animation(.easeInOut(duration: 0.2), value: progress)
                 }

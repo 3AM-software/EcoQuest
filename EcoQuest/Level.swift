@@ -17,7 +17,7 @@ struct HeaderTitleView: View {
             .frame(height: 100)
             HStack {
                 Text("EcoQuest")
-                    .font(.custom("Ranchers", size: 28))
+                    .font(.title)
                     .tracking(-0.5)
                     .fontWeight(.heavy)
                     .foregroundColor(.white)
@@ -61,18 +61,20 @@ struct ProfileInfoView: View {
                                 .frame(width: 24, height: 24)
                                 .foregroundColor(.yellow)
                             Text("Level \(level.levelNum) \(level.levelTitle)")
-                                .font(.title3)
-                                .fontWeight(.bold)
+                                .font(.custom("Fredoka", size: 24))
+                                .fontWeight(.semibold)
                         }
                         
                         Spacer()
                         
                         if level.levelNum < 10 {
                             Text("Next: \(level.pointsToNext) pts")
-                                .font(.subheadline)
+                                .font(.custom("Fredoka", size: 16))
+                                .fontWeight(.medium)
                         } else {
                             Text("Max Level")
-                                .font(.subheadline)
+                                .font(.custom("Fredoka", size: 16))
+                                .fontWeight(.medium)
                         }
                     }
                     withAnimation(.spring()) {
@@ -89,20 +91,22 @@ struct ProfileInfoView: View {
                                 .foregroundColor(.white)
                             VStack(alignment: .leading) {
                                 Text("\(userViewModel.totalpoints)")
-                                    .font(.title)
+                                    .font(.custom("Fredoka", size: 28))
                                     .fontWeight(.bold)
                                 Text("Total Points")
-                                    .font(.subheadline)
+                                    .font(.custom("Fredoka", size: 16))
+                                    .fontWeight(.medium)
                             }
                         }
                         Spacer()
                         
                         VStack(alignment: .trailing) {
                             Text("+\(userViewModel.todaypoints)")
-                                .font(.title2)
+                                .font(.custom("Fredoka", size: 24))
                                 .fontWeight(.bold)
                             Text("Today's Points")
-                                .font(.subheadline)
+                                .font(.custom("Fredoka", size: 16))
+                                .fontWeight(.medium)
                         }
                     }
                 }
@@ -147,6 +151,7 @@ struct StreakBadge: View {
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.orange)
             Text("\(userViewModel.streak) Day Streak!")
+                .font(.custom("Fredoka", size: 18))
                 .fontWeight(.bold)
                 .foregroundColor(ThemeColors.Content.primary(isDarkMode))
         }
