@@ -252,7 +252,7 @@ class UserViewModel: ObservableObject {
     }
     
     func showAwardPopupWithDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             self.showAwardPopup = true
         }
     }
