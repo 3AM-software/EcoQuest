@@ -26,7 +26,6 @@
 		CA67E24A2CCAB57C00ACFB78 /* Ranchers-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */; };
 		CA7CB55F2CCADB77003A3525 /* Ranchers-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */; };
 		CA7CB5602CCADB78003A3525 /* Ranchers-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */; };
-		CA7CB5622CCADC65003A3525 /* Comfortaa-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA7CB5612CCADC65003A3525 /* Comfortaa-Medium.ttf */; };
 		CA7CB5662CCADEC6003A3525 /* Fredoka-VariableFont_wdth,wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA7CB5652CCADEC6003A3525 /* Fredoka-VariableFont_wdth,wght.ttf */; };
 /* End PBXBuildFile section */
 
@@ -65,7 +64,6 @@
 		CA2ACB472CC97CA500C97111 /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		CA47ED4B2CC9C4C90062578B /* Awards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Awards.swift; sourceTree = "<group>"; };
 		CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ranchers-Regular.ttf"; sourceTree = "<group>"; };
-		CA7CB5612CCADC65003A3525 /* Comfortaa-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Comfortaa-Medium.ttf"; sourceTree = "<group>"; };
 		CA7CB5652CCADEC6003A3525 /* Fredoka-VariableFont_wdth,wght.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fredoka-VariableFont_wdth,wght.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -130,7 +128,6 @@
 			isa = PBXGroup;
 			children = (
 				CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */,
-				CA7CB5612CCADC65003A3525 /* Comfortaa-Medium.ttf */,
 				CA7CB5652CCADEC6003A3525 /* Fredoka-VariableFont_wdth,wght.ttf */,
 				CA2ACB402CC9656800C97111 /* Info.plist */,
 				CA2ACB0F2CC6BF5C00C97111 /* EcoQuestApp.swift */,
@@ -286,7 +283,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CA7CB5622CCADC65003A3525 /* Comfortaa-Medium.ttf in Resources */,
 				CA2ACB172CC6BF5E00C97111 /* Preview Assets.xcassets in Resources */,
 				CA2ACB142CC6BF5E00C97111 /* Assets.xcassets in Resources */,
 				CA67E24A2CCAB57C00ACFB78 /* Ranchers-Regular.ttf in Resources */,

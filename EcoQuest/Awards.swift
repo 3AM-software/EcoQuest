@@ -55,8 +55,6 @@ struct RecordCardView: View {
     }
 }
 
-import SwiftUI
-
 struct RecordsView: View {
     @ObservedObject var userViewModel: UserViewModel
     let isDarkMode: Bool
@@ -163,11 +161,11 @@ struct AwardsView: View {
         // Sample awards data with text
         let awards = [
             (icon: "star.fill", text: "First Steps", isUnlocked: userViewModel.firstAwardUnlocked, color: Color.yellow),
-            (icon: "flame.fill", text: "On Fire", isUnlocked: false, color: Color.orange),
-            (icon: "shield.fill", text: "Warrior", isUnlocked: false, color: Color.blue),
-            (icon: "leaf.arrow.circlepath", text: "Dedicated", isUnlocked: false, color: Color.red),
-            (icon: "leaf.fill", text: "Nature Friend", isUnlocked: false, color: Color.green),
-            (icon: "crown.fill", text: "Champion", isUnlocked: false, color: Color.purple)
+            (icon: "flame.fill", text: "On Fire", isUnlocked: userViewModel.secondAwardUnlocked, color: Color.orange),
+            (icon: "shield.fill", text: "Warrior", isUnlocked: userViewModel.thirdAwardUnlocked, color: Color.blue),
+            (icon: "leaf.arrow.circlepath", text: "Dedicated", isUnlocked: userViewModel.fourthAwardUnlocked, color: Color.red),
+            (icon: "tree.fill", text: "Nature Friend", isUnlocked: userViewModel.fifthAwardUnlocked, color: Color.green),
+            (icon: "crown.fill", text: "Champion", isUnlocked: userViewModel.sixthAwardUnlocked, color: Color.purple)
         ]
 
         ZStack {
@@ -198,4 +196,3 @@ struct AwardsView: View {
         }
     }
 }
-

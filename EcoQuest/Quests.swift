@@ -10,7 +10,7 @@ func encodeImage(image: UIImage) -> String {
 }
 
 func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-    let apiKey = "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"
+    let apiKey = "API_KEY"
     let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     
     var request = URLRequest(url: url)
@@ -180,8 +180,6 @@ struct NewQuestView: View {
         }
     }
     
-    // MARK: - Helper Methods
-    
     private func handleQuestSelection(_ quest: NewQuest) {
         if !quest.isCompleted {
             selectedQuest = quest
@@ -241,8 +239,6 @@ struct NewQuestView: View {
             }
         }
     }
-
-    // MARK: - Quest List View
     
     struct QuestListView: View {
         @Binding var quests: [NewQuest]
@@ -271,8 +267,6 @@ struct NewQuestView: View {
             .padding(.top, -4)
         }
     }
-    
-    // MARK: - Quest Button
     
     struct QuestButton: View {
         let quest: NewQuest
@@ -327,10 +321,7 @@ struct NewQuestView: View {
             .buttonStyle(PlainButtonStyle())
         }
     }
-    
-    
-    // MARK: - Quest Icon
-    
+       
     struct QuestIcon: View {
         let quest: NewQuest
         
@@ -348,9 +339,7 @@ struct NewQuestView: View {
             }
         }
     }
-    
-    // MARK: - Quest Title and Points
-    
+
     struct QuestTitleAndPoints: View {
         let quest: NewQuest
         let isDarkMode: Bool
@@ -377,9 +366,7 @@ struct NewQuestView: View {
             .padding(.top, 10)
         }
     }
-    
-    // MARK: - Quest Progress Bar
-    
+
     struct QuestProgressBar: View {
         let quest: NewQuest
         
@@ -392,8 +379,6 @@ struct NewQuestView: View {
             .padding(.bottom, 8)
         }
     }
-    
-    // MARK: - Quest Divider
     
     struct QuestDivider: View {
         let isDarkMode: Bool

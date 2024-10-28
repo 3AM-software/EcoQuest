@@ -183,6 +183,35 @@ class UserViewModel: ObservableObject {
                 UserDefaults.standard.set(firstAwardUnlocked, forKey: "firstAwardUnlocked")
             }
         }
+    @Published var secondAwardUnlocked: Bool = false {
+        didSet {
+            UserDefaults.standard.set(secondAwardUnlocked, forKey: "secondAwardUnlocked")
+        }
+    }
+
+    @Published var thirdAwardUnlocked: Bool = false {
+        didSet {
+            UserDefaults.standard.set(thirdAwardUnlocked, forKey: "thirdAwardUnlocked")
+        }
+    }
+
+    @Published var fourthAwardUnlocked: Bool = false {
+        didSet {
+            UserDefaults.standard.set(fourthAwardUnlocked, forKey: "fourthAwardUnlocked")
+        }
+    }
+
+    @Published var fifthAwardUnlocked: Bool = false {
+        didSet {
+            UserDefaults.standard.set(fifthAwardUnlocked, forKey: "fifthAwardUnlocked")
+        }
+    }
+
+    @Published var sixthAwardUnlocked: Bool = false {
+        didSet {
+            UserDefaults.standard.set(sixthAwardUnlocked, forKey: "sixthAwardUnlocked")
+        }
+    }
 
     init() {
         self.totalpoints = UserDefaults.standard.integer(forKey: "totalPoints")
@@ -208,21 +237,11 @@ class UserViewModel: ObservableObject {
         self.numQuests = UserDefaults.standard.integer(forKey: "numQuests")
         self.trees = UserDefaults.standard.integer(forKey: "trees")
         self.trips = UserDefaults.standard.integer(forKey: "trips")
-    }
-    
-    func checkAndUpdateStreak() {
-        let calendar = Calendar.current
-        if calendar.isDateInYesterday(lastActionDate) {
-            // If the last action date was yesterday, continue the streak
-            incrementStreak()
-            if streak > highStreak {
-                setHighestStreak(streak)
-                dateOfHighestStreak = Date()
-            }
-        } else if !calendar.isDateInToday(lastActionDate) {
-            // If the last action date wasn't today or yesterday, reset the streak
-            resetStreak()
-        }
+        self.secondAwardUnlocked = UserDefaults.standard.bool(forKey: "secondAwardUnlocked")
+        self.thirdAwardUnlocked = UserDefaults.standard.bool(forKey: "thirdAwardUnlocked")
+        self.fourthAwardUnlocked = UserDefaults.standard.bool(forKey: "fourthAwardUnlocked")
+        self.fifthAwardUnlocked = UserDefaults.standard.bool(forKey: "fifthAwardUnlocked")
+        self.sixthAwardUnlocked = UserDefaults.standard.bool(forKey: "sixthAwardUnlocked")
     }
 
     func setHighestStreak(_ high: Int) {
@@ -243,12 +262,29 @@ class UserViewModel: ObservableObject {
         }
         numQuests += 1
         dateOfNumQuests = Date()
+        // Unlock first steps award when you get your first point
         if !firstAwardUnlocked && totalpoints >= 1 {
             firstAwardUnlocked = true
+            awardNum = 0
             withAnimation {
                 showAwardPopupWithDelay()
             }
-            awardNum = 0
+        }
+        // Unlock champion award when achieving max level
+        if !sixthAwardUnlocked && totalpoints >= 11601 {
+            sixthAwardUnlocked = true
+            awardNum = 5
+            withAnimation {
+                showAwardPopupWithDelay()
+            }
+        }
+        // Unlock warior award when completing 15th quest
+        if !thirdAwardUnlocked && numQuests >= 15 {
+            thirdAwardUnlocked = true
+            awardNum = 2
+            withAnimation {
+                showAwardPopupWithDelay()
+            }
         }
     }
     
@@ -278,6 +314,13 @@ class UserViewModel: ObservableObject {
             treeAction += 1
             co2 += 1
             trees += 1
+            if !fifthAwardUnlocked {
+                fifthAwardUnlocked = true
+                awardNum = 4
+                withAnimation {
+                    showAwardPopupWithDelay()
+                }
+            }
         } else if action == "switchLight" {
             lightAction += 1
             energy += 1
@@ -290,6 +333,26 @@ class UserViewModel: ObservableObject {
         if !calendar.isDateInToday(lastActionDate) {
             if calendar.isDateInYesterday(lastActionDate) {
                 incrementStreak()
+                if streak > highStreak {
+                    highStreak = streak
+                    dateOfHighestStreak = Date()
+                }
+                // Unlock on fire award if streak is 10
+                if !secondAwardUnlocked && streak >= 10 {
+                    secondAwardUnlocked = true
+                    awardNum = 1
+                    withAnimation {
+                        showAwardPopupWithDelay()
+                    }
+                }
+                // Unlock dedicated award if streak is 20
+                if !fourthAwardUnlocked && streak >= 20 {
+                    fourthAwardUnlocked = true
+                    awardNum = 3
+                    withAnimation {
+                        showAwardPopupWithDelay()
+                    }
+                }
             } else {
                 resetStreak()
             }
