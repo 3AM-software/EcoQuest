@@ -10,7 +10,9 @@ func encodeImage(image: UIImage) -> String {
 }
 
 func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-    let apiKey = "not an api key"
+
+    let apiKey = "FRI"
+
     let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     
     var request = URLRequest(url: url)
@@ -180,6 +182,8 @@ struct NewQuestView: View {
         }
     }
     
+    // MARK: - Helper Methods
+    
     private func handleQuestSelection(_ quest: NewQuest) {
         if !quest.isCompleted {
             selectedQuest = quest
@@ -203,6 +207,7 @@ struct NewQuestView: View {
                 globalState.processingImage = false
                 processingQuestId = nil
 
+                print("analzying")
                 if completed.lowercased().contains("yes"),
                    let index = quests.firstIndex(where: { $0.id == selectedQuest.id }) {
                     withAnimation(.spring()) {
@@ -239,6 +244,8 @@ struct NewQuestView: View {
             }
         }
     }
+
+    // MARK: - Quest List View
     
     struct QuestListView: View {
         @Binding var quests: [NewQuest]
@@ -267,6 +274,8 @@ struct NewQuestView: View {
             .padding(.top, -4)
         }
     }
+    
+    // MARK: - Quest Button
     
     struct QuestButton: View {
         let quest: NewQuest
@@ -321,7 +330,10 @@ struct NewQuestView: View {
             .buttonStyle(PlainButtonStyle())
         }
     }
-       
+    
+    
+    // MARK: - Quest Icon
+    
     struct QuestIcon: View {
         let quest: NewQuest
         
@@ -339,7 +351,9 @@ struct NewQuestView: View {
             }
         }
     }
-
+    
+    // MARK: - Quest Title and Points
+    
     struct QuestTitleAndPoints: View {
         let quest: NewQuest
         let isDarkMode: Bool
@@ -349,7 +363,7 @@ struct NewQuestView: View {
                 Text(quest.title)
                     .font(.custom("Fredoka", fixedSize: 18))
                     .fontWeight(.semibold)
-                    .foregroundColor(ThemeColors.Content.primary(isDarkMode))
+                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
                 
                 Spacer()
                 
@@ -366,7 +380,9 @@ struct NewQuestView: View {
             .padding(.top, 10)
         }
     }
-
+    
+    // MARK: - Quest Progress Bar
+    
     struct QuestProgressBar: View {
         let quest: NewQuest
         
@@ -379,6 +395,8 @@ struct NewQuestView: View {
             .padding(.bottom, 8)
         }
     }
+    
+    // MARK: - Quest Divider
     
     struct QuestDivider: View {
         let isDarkMode: Bool

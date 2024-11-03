@@ -1,15 +1,6 @@
 {
-  "originHash" : "b70cf5cede0dd173707524531f1d1da58020ded83444392dfd3dfe635a07fd5c",
+  "originHash" : "0813d8074328ac339b3ad4d9e895dca3cbd4327633fce793259860c9993a0805",
   "pins" : [
-    {
-      "identity" : "cocoalumberjack",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CocoaLumberjack/CocoaLumberjack.git",
-      "state" : {
-        "revision" : "4b8714a7fb84d42393314ce897127b3939885ec3",
-        "version" : "3.8.5"
-      }
-    },
     {
       "identity" : "confettiswiftui",
       "kind" : "remoteSourceControl",
@@ -17,42 +8,6 @@
       "state" : {
         "revision" : "f45961f97bbae6fff6e2e64546fea0189425ad92",
         "version" : "1.1.0"
-      }
-    },
-    {
-      "identity" : "mockimagepicker",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/yonat/MockImagePicker",
-      "state" : {
-        "revision" : "919e5b25a803c41d206d231b2f8a5db31dddf525",
-        "version" : "1.3.0"
-      }
-    },
-    {
-      "identity" : "svgkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SVGKit/SVGKit",
-      "state" : {
-        "revision" : "58152b9f7c85eab239160b36ffdfd364aa43d666",
-        "version" : "3.0.0"
-      }
-    },
-    {
-      "identity" : "sweeterswift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/yonat/SweeterSwift",
-      "state" : {
-        "revision" : "d324c3ce0d021f8d1f11f10014ad597fad60e36c",
-        "version" : "1.2.5"
-      }
-    },
-    {
-      "identity" : "swift-log",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-log",
-      "state" : {
-        "revision" : "9cb486020ebf03bfa5b5df985387a14a98744537",
-        "version" : "1.6.1"
       }
     }
   ],

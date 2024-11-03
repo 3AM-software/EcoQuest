@@ -9,22 +9,19 @@ import SwiftUI
 import Combine
 import Foundation
 
-import Foundation
-
-import Foundation
 
 struct Level: Identifiable, Codable {
     static let levelTitles: [Int: String] = [
             1: "Novice",
             2: "Adept",
             3: "Fighter",
-            4: "Champion",
-            5: "Defender",
-            6: "Guardian",
-            7: "Warrior",
-            8: "Hero",
-            9: "Sage",
-            10: "Legend"
+            4: "Defender",
+            5: "Guardian",
+            6: "Warrior",
+            7: "Hero",
+            8: "Sage",
+            9: "Legend",
+            10: "Champion"
         ]
         
         static let pointsPerLevel: [Int: Int] = [
@@ -91,7 +88,7 @@ struct EcoQuestApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .preferredColorScheme(isDarkMode ? .dark : .light)
+                .preferredColorScheme(.dark)
         }
     }
 }

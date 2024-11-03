@@ -17,7 +17,7 @@ struct HeaderTitleView: View {
             .frame(height: 100)
             HStack {
                 Text("EcoQuest")
-                    .font(.title)
+                    .font(.custom("Fredoka", size: 28))
                     .tracking(-0.5)
                     .fontWeight(.heavy)
                     .foregroundColor(.white)
@@ -50,7 +50,6 @@ struct ProfileInfoView: View {
                 endPoint: .trailing
             )
             .frame(height: 550)
-            
             VStack(spacing: 16) {
                 VStack(spacing: 12) {
                     HStack {
@@ -121,7 +120,6 @@ struct ProfileInfoView: View {
     }
 }
 
-
 struct LevelProgressBar: View {
     let progress: Double
     
@@ -153,7 +151,7 @@ struct StreakBadge: View {
             Text("\(userViewModel.streak) Day Streak!")
                 .font(.custom("Fredoka", size: 18))
                 .fontWeight(.bold)
-                .foregroundColor(ThemeColors.Content.primary(isDarkMode))
+                .foregroundColor(ThemeColors.Text.primary(isDarkMode))
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 8)

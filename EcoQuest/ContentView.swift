@@ -5,14 +5,6 @@ import AVFoundation
 import Combine
 import ConfettiSwiftUI
 
-#if targetEnvironment(simulator)
-import MockImagePicker
-typealias UIImagePickerController = MockImagePicker
-typealias UIImagePickerControllerDelegate = MockImagePickerDelegate
-#endif
-
-
-
 struct ThemeColors {
     static let primary = Color(red: 22/255, green: 162/255, blue: 74/255)
     static let primaryGradient = [
@@ -41,6 +33,12 @@ struct ThemeColors {
             isDark ? Color(red: 20/255, green: 31/255, blue: 37/255) : Color.white
         }
     }
+    
+    struct Text {
+        static func primary(_ isDark: Bool) -> Color {
+            isDark ? Color.white : Color(red: 51/255, green: 51/255, blue: 51/255)
+        }
+    }
 }
 
 class UserViewModel: ObservableObject {
@@ -67,7 +65,7 @@ class UserViewModel: ObservableObject {
     
     @Published var highStreak: Int {
         didSet {
-            UserDefaults.standard.set(highStreak, forKey: "hStreak")
+            UserDefaults.standard.set(highStreak, forKey: "highStreak")
         }
     }
     
@@ -183,41 +181,12 @@ class UserViewModel: ObservableObject {
                 UserDefaults.standard.set(firstAwardUnlocked, forKey: "firstAwardUnlocked")
             }
         }
-    @Published var secondAwardUnlocked: Bool = false {
-        didSet {
-            UserDefaults.standard.set(secondAwardUnlocked, forKey: "secondAwardUnlocked")
-        }
-    }
-
-    @Published var thirdAwardUnlocked: Bool = false {
-        didSet {
-            UserDefaults.standard.set(thirdAwardUnlocked, forKey: "thirdAwardUnlocked")
-        }
-    }
-
-    @Published var fourthAwardUnlocked: Bool = false {
-        didSet {
-            UserDefaults.standard.set(fourthAwardUnlocked, forKey: "fourthAwardUnlocked")
-        }
-    }
-
-    @Published var fifthAwardUnlocked: Bool = false {
-        didSet {
-            UserDefaults.standard.set(fifthAwardUnlocked, forKey: "fifthAwardUnlocked")
-        }
-    }
-
-    @Published var sixthAwardUnlocked: Bool = false {
-        didSet {
-            UserDefaults.standard.set(sixthAwardUnlocked, forKey: "sixthAwardUnlocked")
-        }
-    }
 
     init() {
         self.totalpoints = UserDefaults.standard.integer(forKey: "totalPoints")
         self.todaypoints = UserDefaults.standard.integer(forKey: "todayPoints")
         self.streak = UserDefaults.standard.integer(forKey: "streak")
-        self.highStreak = UserDefaults.standard.integer(forKey: "hStreak")
+        self.highStreak = UserDefaults.standard.integer(forKey: "highStreak")
         self.lastActionDate = UserDefaults.standard.object(forKey: "lastActionDate") as? Date ?? Date()
         self.co2 = UserDefaults.standard.integer(forKey: "co2")
         self.firstAwardUnlocked = UserDefaults.standard.bool(forKey: "firstAwardUnlocked")
@@ -237,11 +206,18 @@ class UserViewModel: ObservableObject {
         self.numQuests = UserDefaults.standard.integer(forKey: "numQuests")
         self.trees = UserDefaults.standard.integer(forKey: "trees")
         self.trips = UserDefaults.standard.integer(forKey: "trips")
-        self.secondAwardUnlocked = UserDefaults.standard.bool(forKey: "secondAwardUnlocked")
-        self.thirdAwardUnlocked = UserDefaults.standard.bool(forKey: "thirdAwardUnlocked")
-        self.fourthAwardUnlocked = UserDefaults.standard.bool(forKey: "fourthAwardUnlocked")
-        self.fifthAwardUnlocked = UserDefaults.standard.bool(forKey: "fifthAwardUnlocked")
-        self.sixthAwardUnlocked = UserDefaults.standard.bool(forKey: "sixthAwardUnlocked")
+    }
+    
+    func checkAndUpdateStreak() {
+        let calendar = Calendar.current
+        if calendar.isDateInYesterday(lastActionDate) {
+            // If the last action date was yesterday, continue the streak
+            incrementStreak()
+            if streak > highStreak {
+                setHighestStreak(streak)
+                dateOfHighestStreak = Date()
+            }
+        }
     }
 
     func setHighestStreak(_ high: Int) {
@@ -262,29 +238,12 @@ class UserViewModel: ObservableObject {
         }
         numQuests += 1
         dateOfNumQuests = Date()
-        // Unlock first steps award when you get your first point
         if !firstAwardUnlocked && totalpoints >= 1 {
             firstAwardUnlocked = true
+            withAnimation {
+                showAwardPopupWithDelay()
+            }
             awardNum = 0
-            withAnimation {
-                showAwardPopupWithDelay()
-            }
-        }
-        // Unlock champion award when achieving max level
-        if !sixthAwardUnlocked && totalpoints >= 11601 {
-            sixthAwardUnlocked = true
-            awardNum = 5
-            withAnimation {
-                showAwardPopupWithDelay()
-            }
-        }
-        // Unlock warior award when completing 15th quest
-        if !thirdAwardUnlocked && numQuests >= 15 {
-            thirdAwardUnlocked = true
-            awardNum = 2
-            withAnimation {
-                showAwardPopupWithDelay()
-            }
         }
     }
     
@@ -314,52 +273,14 @@ class UserViewModel: ObservableObject {
             treeAction += 1
             co2 += 1
             trees += 1
-            if !fifthAwardUnlocked {
-                fifthAwardUnlocked = true
-                awardNum = 4
-                withAnimation {
-                    showAwardPopupWithDelay()
-                }
-            }
         } else if action == "switchLight" {
             lightAction += 1
             energy += 1
         }
         
-        // Update the streak after performing an action
-        let today = Date()
-        let calendar = Calendar.current
+        checkAndUpdateStreak()
         
-        if !calendar.isDateInToday(lastActionDate) {
-            if calendar.isDateInYesterday(lastActionDate) {
-                incrementStreak()
-                if streak > highStreak {
-                    highStreak = streak
-                    dateOfHighestStreak = Date()
-                }
-                // Unlock on fire award if streak is 10
-                if !secondAwardUnlocked && streak >= 10 {
-                    secondAwardUnlocked = true
-                    awardNum = 1
-                    withAnimation {
-                        showAwardPopupWithDelay()
-                    }
-                }
-                // Unlock dedicated award if streak is 20
-                if !fourthAwardUnlocked && streak >= 20 {
-                    fourthAwardUnlocked = true
-                    awardNum = 3
-                    withAnimation {
-                        showAwardPopupWithDelay()
-                    }
-                }
-            } else {
-                resetStreak()
-            }
-        }
-        
-        // Update the last action date
-        lastActionDate = today
+        lastActionDate = Date()
     }
     
     func resetActions() {
@@ -393,7 +314,7 @@ class UserViewModel: ObservableObject {
     }
 
     func resetStreak() {
-        streak = 0
+        streak = 1
     }
 }
 
@@ -508,7 +429,7 @@ struct LoadingOverlay: View {
                 
                 // Loading message
                 Text("Processing Quest")
-                    .foregroundColor(isDarkMode ? .white : .black)
+                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
                     .font(.custom("Fredoka", size: 20))
                     .fontWeight(.semibold)
                     .padding(.top, 8)
@@ -558,7 +479,7 @@ struct ErrorOverlay: View {
 
 
 struct ContentView: View {
-    @State private var isLoading = true
+    @State private var isLoading = false
     var body: some View {
         Group {
             if isLoading {
@@ -578,16 +499,19 @@ struct ContentView: View {
 struct MainApp: View {
     @ObservedObject var globalState = GlobalState.shared
     @State private var showSettings = false
-    @State private var selectedTab: String = "Leaf"
+    @State private var selectedTab: String = "Home"
     @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var selectedDetent: PresentationDetent = .height(700)
     @StateObject private var userViewModel = UserViewModel()
     
     @State private var lastRunDate: Date = Date.distantPast
     @State private var countdown: String = "24:00" // To hold the countdown string
+    @State private var hourString: String = "24"
     @State private var timer: Timer?
     @State private var popupOpacity = 0.0
     @State private var popupScale = 0.8
+    
+    @State private var communityTab = "Leaderboard"
 
 
     var body: some View {
@@ -597,11 +521,40 @@ struct MainApp: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                HeaderTitleView()
                 
-                ScrollView {
-                    VStack(alignment: .center) {
-                        if selectedTab == "Leaf" {
+                HeaderTitleView()
+                if selectedTab == "Impact"{
+                    Text("Your Impact")
+                        .font(.custom("Fredoka", size: 24))
+                        .fontWeight(.semibold)
+                        .foregroundColor(ThemeColors.Text.primary(isDarkMode))
+                        .padding(.vertical, 12) // Add top padding if needed
+                        .frame(maxWidth: .infinity) // Makes the text occupy full width
+                        .multilineTextAlignment(.center) // Center-align the text
+                    Rectangle()
+                        .frame(height: 2)
+                        .foregroundColor(ThemeColors.Content.border(isDarkMode))
+                }
+                
+                VStack(alignment: .center) {
+                    if selectedTab == "Impact" {
+                        ScrollView {
+                            ZStack (alignment: .bottom) {
+                                ImpactView(userViewModel: userViewModel, isDarkMode: isDarkMode)
+                                    .transition(.opacity)
+                                CompactImpactBarView(
+                                    userViewModel: userViewModel,
+                                    isDarkMode: isDarkMode
+                                )
+                                .transition(.opacity) // Combines opacity and scale transitions
+                                .animation(.easeInOut(duration: 0.3), value: selectedTab) // Applies smooth animation
+                                .background(.clear)
+                            }
+                            .transition(.opacity)
+                        }
+                    }
+                    else if selectedTab == "Home" {
+                        ScrollView {
                             VStack {
                                 ProfileInfoView(userViewModel: userViewModel)
                                     .edgesIgnoringSafeArea(.top)
@@ -614,7 +567,7 @@ struct MainApp: View {
                                     Text("Daily Quests")
                                         .font(.custom("Fredoka", size: 24))
                                         .fontWeight(.semibold)
-                                        .foregroundColor(isDarkMode ? .white : .black)
+                                        .foregroundColor(ThemeColors.Text.primary(isDarkMode))
                                     Spacer()
                                     Image(systemName: "clock")
                                         .font(.system(size: 16, weight: .bold))
@@ -631,48 +584,27 @@ struct MainApp: View {
                                 NewQuestView(isDarkMode: isDarkMode, userViewModel: userViewModel)
                                     .transition(.opacity)
                                     .padding(.bottom, 10)
-                                
-                                HStack {
-                                    Text("Your Impact")
-                                        .font(.custom("Fredoka", size: 24))
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(isDarkMode ? .white : .black)
-                                    Spacer()
-                                    Menu {
-                                        Button("This Month", action: {})
-                                        Button("Last Month", action: {})
-                                        Button("This Year", action: {})
-                                    } label: {
-                                        Text("This Month")
-                                            .font(.custom("Fredoka",size:16))
-                                            .foregroundColor(.gray)
-                                            .fontWeight(.medium)
-                                    }
-                                }
-                                .padding(.horizontal)
-                                
-                                ImpactView(userViewModel: userViewModel, isDarkMode: isDarkMode)
-                                    .transition(.opacity)
                             }
-                        } else if selectedTab == "Awards" {
+                        }
+                    } else if selectedTab == "Awards" {
+                        ScrollView {
                             HStack {
                                 Text("Personal Records")
                                     .font(.custom("Fredoka", size: 24))
                                     .fontWeight(.semibold)
-                                    .foregroundColor(isDarkMode ? .white : .black)
+                                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
                                 Spacer()
-                                
                             }
                             .padding(.horizontal)
                             .padding(.top)
                             RecordsView(userViewModel: userViewModel, isDarkMode: isDarkMode)
                                 .transition(.opacity)
-                                .padding(0)
+                                .padding(.top, -16)
                             HStack {
                                 Text("Awards")
                                     .font(.custom("Fredoka", size: 24))
                                     .fontWeight(.semibold)
-                                    .foregroundColor(isDarkMode ? .white : .black)
+                                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
                                 Spacer()
                                 
                             }
@@ -681,11 +613,22 @@ struct MainApp: View {
                                 .transition(.opacity)
                                 .padding(.bottom)
                         }
+                    } else if selectedTab == "Friends" {
+                        ScrollView {
+                            Community(userViewModel: userViewModel, isDarkMode: isDarkMode, communityTab: communityTab)
+                                .transition(.opacity)
+                                .padding(.bottom)
+                        }
+                    } else if selectedTab == "Profile" {
+                        ScrollView {
+                            
+                        }
                     }
-                    .animation(.easeInOut(duration: 0.3), value: selectedTab)
                 }
+                .animation(.easeInOut(duration: 0.3), value: selectedTab)
                 bottomNavBar
             }
+            .animation(.easeInOut(duration: 0.3), value: selectedTab)
             .edgesIgnoringSafeArea(.all)
             .onAppear {
                 //userViewModel.resetAll()
@@ -768,7 +711,9 @@ struct MainApp: View {
         let minutes = (Int(timeInterval) % 3600) / 60
         
         countdown = String(format: "%02d:%02d", hours, minutes) // Update countdown string
+        hourString = String(format: "%02d", hours)
     }
+    
     private func checkAndPerformDailyTask() {
         let userDefaults = UserDefaults.standard
         let currentDate = Date()
@@ -784,15 +729,20 @@ struct MainApp: View {
             userDefaults.set(currentDate, forKey: "lastPointsResetDate")  // Update last run date
         }
     }
+    
     private func performDailyFunction() {
-        // Your logic to reset points or other daily tasks
         userViewModel.resetActions()
         userViewModel.resetPoints()
+        let calendar = Calendar.current
+        if !calendar.isDateInToday(userViewModel.lastActionDate) {
+            // If the last action date wasn't today or yesterday, reset the streak
+            userViewModel.resetStreak()
+        }
     }
     
     var bottomNavBar: some View {
         HStack {
-            ForEach(["Leaf", "Awards", "Settings"], id: \.self) { icon in
+            ForEach(["Impact", "Awards", "Home", "Friends", "Profile", "Settings"], id: \.self) { icon in
                 ZStack {
                     if selectedTab == icon {
                         RoundedRectangle(cornerRadius: 6)
@@ -820,28 +770,30 @@ struct MainApp: View {
                 }
                 .sheet(isPresented: $showSettings) {
                     SettingsView()
-                        .presentationDetents([.medium, .fraction(0.75), .height(700)], selection: $selectedDetent)
+                        .presentationDetents([.height(700)])
                 }
             }
         }
-        .padding(.horizontal, 64)
+        .padding(.horizontal)
         .padding(.top, 12)
         .padding(.bottom, 32)
         .background(Color.gray.opacity(0.1))
         .overlay(
             Rectangle()
-                .frame(height: 1)
+                .frame(height: 2)
                 .foregroundColor(.gray.opacity(0.2)),
             alignment: .top
         )
     }
     
-    // Helper function for system icons
     func getSystemImage(for icon: String) -> String {
         switch icon {
-        case "Leaf": return "leaf.fill"
+        case "Impact": return "globe.americas.fill"
+        case "Home": return "house.fill"
         case "Awards": return "medal.fill"
         case "Settings": return "gearshape.fill"
+        case "Friends": return "trophy.fill"
+        case "Profile": return "person.fill"
         default: return "leaf"
         }
     }
@@ -853,21 +805,75 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Appearance")) {
-                    Toggle(isOn: $isDarkMode) {
+            ZStack {
+         
+                ThemeColors.Background.primary(isDarkMode)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    
+                    VStack(spacing: 0) {
                         HStack {
-                            Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
-                                .foregroundColor(isDarkMode ? .blue : .yellow)
-                            Text(isDarkMode ? "Dark Mode" : "Light Mode")
+                            Text("Settings")
+                                .font(.custom("Fredoka", size: 28))
+                                .fontWeight(.semibold)
+                                .foregroundColor(ThemeColors.Content.primary(isDarkMode))
+                            Spacer()
+                            Button(action: { dismiss() }) {
+                                Text("Done")
+                                    .font(.custom("Fredoka", size: 18))
+                                    .foregroundColor(.blue)
+                            }
                         }
+                        .padding()
+                        
+                        
+                        Rectangle()
+                            .frame(height: 2)
+                            .foregroundColor(ThemeColors.Content.border(isDarkMode))
                     }
+                    .background(ThemeColors.Background.primary(isDarkMode))
+                    
+                   
+                    VStack(spacing: 16) {
+                        
+                        HStack {
+                            Text("Appearance")
+                                .font(.custom("Fredoka", size: 16))
+                                .textCase(nil)
+                                .foregroundColor(.gray)
+                                .padding(.top, 8)
+                            Spacer()
+                        }
+                        HStack {
+                            Spacer()
+                            Toggle(isOn: $isDarkMode) {
+                                HStack(spacing: 12) {
+                                    Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
+                                        .foregroundColor(isDarkMode ? .blue : .yellow)
+                                        .font(.system(size: 20))
+                                    
+                                    Text(isDarkMode ? "Dark Mode" : "Light Mode")
+                                        .font(.custom("Fredoka", size: 16))
+                                }
+                            }
+                            .tint(Color.green)
+                            .padding(.horizontal, 8)
+                            Spacer()
+                        }
+                        .padding(.vertical, 8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
+                        )
+                    }
+                    .padding()
+                    .background(ThemeColors.Background.primary(isDarkMode))
+                    Spacer()
                 }
             }
-            .navigationTitle("Settings")
-            .navigationBarItems(trailing: Button("Done") { dismiss() })
             .preferredColorScheme(isDarkMode ? .dark : .light)
-            
+            .navigationBarHidden(true)
         }
     }
 }
