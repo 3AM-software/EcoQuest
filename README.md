@@ -52,10 +52,10 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
+<p style="color:gray;">Screenshots taken from unfinished product</p>
+
 | ![IMG_8986](https://github.com/user-attachments/assets/1867c560-e241-49ee-935d-a8d81cd860b0) | ![IMG_8987](https://github.com/user-attachments/assets/4846d98f-e58e-4268-89f7-6b2b894f4c32) |
 |---|---|
-
-
 
 EcoQuest is designed to encourage eco-friendly behaviors by offering daily challenges that help users reduce their environmental impact. Users can track their progress, earn points, and compete on leaderboards (soon!), making sustainability a fun and engaging experience.
 
