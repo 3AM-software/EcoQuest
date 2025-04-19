@@ -5,6 +5,7 @@ import AVFoundation
 import Combine
 import ConfettiSwiftUI
 
+
 struct ThemeColors {
     static let primary = Color(red: 22/255, green: 162/255, blue: 74/255)
     static let primaryGradient = [
@@ -497,7 +498,7 @@ struct ContentView: View {
 }
 
 struct MainApp: View {
-    @ObservedObject var globalState = GlobalState.shared
+    @ObservedObject var globalState = GlobalState.shared // Keep this
     @State private var showSettings = false
     @State private var selectedTab: String = "Home"
     @AppStorage("isDarkMode") private var isDarkMode = false
@@ -515,7 +516,6 @@ struct MainApp: View {
 
 
     var body: some View {
-        @State var counter: Int = globalState.counter
         ZStack {
             ThemeColors.Background.primary(isDarkMode)
                 .ignoresSafeArea()
@@ -646,17 +646,17 @@ struct MainApp: View {
                                message: "You unlocked an award!",
                                awardNum: userViewModel.awardNum,
                                isDarkMode: isDarkMode)
-                    .opacity(popupOpacity)
-                    .onAppear {
-                        withAnimation(.easeOut(duration: 0.5)) {
-                            popupOpacity = 1.0
-                        }
+                .opacity(popupOpacity)
+                .onAppear {
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        popupOpacity = 1.0
                     }
-                    .onDisappear {
-                        // Reset values if needed
-                        popupOpacity = 0.0
-                        popupScale = 0.8
-                    }
+                }
+                .onDisappear {
+                    // Reset values if needed
+                    popupOpacity = 0.0
+                    popupScale = 0.8
+                }
             }
             if globalState.processingImage {
                 LoadingOverlay(isDarkMode: isDarkMode)
@@ -686,8 +686,9 @@ struct MainApp: View {
                         popupScale = 0.8
                     }
             }
+            
         }
-        .confettiCannon(counter: $counter)
+        .confettiCannon(trigger: $globalState.counter)
     }
     
     private func startTimer() {

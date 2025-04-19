@@ -41,7 +41,7 @@ struct CameraView: View {
                                         .shadow(radius: 5)
                                 }
                             }
-                            .padding(.bottom, 40) // Add some space from the bottom
+                            .padding(.bottom, 10) // Add some space from the bottom
                         }
                     }
 

@@ -1,5 +1,5 @@
-import ConfettiSwiftUI
 import SwiftUI
+import Foundation
 
 func encodeImage(image: UIImage) -> String {
     // Convert UIImage to JPEG data
@@ -9,16 +9,23 @@ func encodeImage(image: UIImage) -> String {
     return "";
 }
 
+func encodeJPEGImage(data: Data) -> String {
+    let base64String = data.base64EncodedString()
+    return "data:image/jpeg;base64,\(base64String)"
+}
+
+
 func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
 
     let apiKey = "FRI"
 
-    let url = URL(string: "https://api.openai.com/v1/chat/completions")!
+    let url = URL(string: "POST https://api.moondream.ai/v1/query")!
+    
     
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
-    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.addValue("your_api_key_here", forHTTPHeaderField: "X-Moondream-Auth")
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
     
     // Create the request body
     // Prepare individual components to simplify the main dictionary construction
@@ -104,6 +111,62 @@ func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
     return result // Return the result
 }
 
+
+func queryMoondream(base64Image: String, prompt: String) -> String {
+    let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlfaWQiOiIzNzY5NjViMC0wYjU1LTQwNDUtOGNiNS00MzYyMDZjMmQyNmUiLCJvcmdfaWQiOiI5SHhQRzhoUnVlT0ROZUp3aXZJYjRPY3JLa2M2TjlQZiIsImlhdCI6MTc0NDk0OTI4MywidmVyIjoxfQ.UBzHSQOf66Ythpp0pV_1Gp-FLeRu2MBfUAiL_x6-fwQ"
+    let url = URL(string: "https://api.moondream.ai/v1/query")!
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.addValue(apiKey, forHTTPHeaderField: "X-Moondream-Auth")
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    let body: [String: Any] = [
+        "image_url": base64Image,
+        "question": prompt,
+        "stream": false
+    ]
+
+    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+    let semaphore = DispatchSemaphore(value: 0)
+    var result = "Failed to get response"
+
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        defer { semaphore.signal() }
+
+        if let error = error {
+            print("Request error: \(error)")
+            return
+        }
+
+        if let httpResponse = response as? HTTPURLResponse {
+            print("Status code: \(httpResponse.statusCode)")
+        }
+
+        guard let data = data else {
+            print("No data received.")
+            return
+        }
+    
+        do {
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let answer = json["answer"] as? String {
+                result = answer
+            } else {
+                print("Invalid response format.")
+            }
+        } catch {
+            print("Failed to parse JSON: \(error)")
+        }
+    }
+
+    task.resume()
+    semaphore.wait() // Wait for the response
+    return result
+}
+
+
 struct NewQuest: Identifiable {
     let id = UUID() // Unique identifier
     let title: String
@@ -128,6 +191,7 @@ class GlobalState: ObservableObject {
     
     private init() {}
 }
+
 
 struct NewQuestView: View {
     let isDarkMode: Bool
@@ -195,13 +259,18 @@ struct NewQuestView: View {
         @ObservedObject var globalState = GlobalState.shared
         
         guard let image = image, let selectedQuest = selectedQuest else { return }
-
-        let base64Image = encodeImage(image: image)
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            print("Failed to convert image to JPEG")
+            return
+        }
+        
+        let base64URI = encodeJPEGImage(data: imageData)
+        
         globalState.processingImage = true
         isCameraPresented = false
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let completed = sendImageToOpenAI(base64Image: base64Image, prompt: selectedQuest.completionPrompt ?? "analyze")
+            let completed = queryMoondream(base64Image: base64URI, prompt: selectedQuest.completionPrompt ?? "analyze")
             
             DispatchQueue.main.async {
                 globalState.processingImage = false
@@ -216,6 +285,7 @@ struct NewQuestView: View {
                         if quests[index].isCompleted {
                             userViewModel.addPoints(quests[index].points)
                             globalState.counter += 1
+                            print("yes", globalState.counter)
                         }
                     }
                 } else {
