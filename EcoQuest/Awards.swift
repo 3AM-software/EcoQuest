@@ -20,37 +20,37 @@ struct RecordCardView: View {
         VStack(alignment: .center, spacing: 8) {
             Image(systemName: record.icon)
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(record.color)
+                .foregroundColor(.white)
                 .padding(16)
-                .background(record.color.opacity(0.15))
+                .background(record.color)
                 .clipShape(Circle())
                 .overlay(
                     Circle()
-                        .stroke(record.color, lineWidth: 2)
-                        .padding(1)
+                        .strokeBorder(.black.opacity(0.1), lineWidth: 2)
                 )
+                
             Text(record.value)
                 .font(.custom("Fredoka", size: 30))
                 .fontWeight(.bold)
                 .foregroundColor(record.color)
-            
+                .shadow(color: .black.opacity(0.15), radius: 4)
             Text(record.title)
                 .font(.custom("Fredoka", size: 18))
                 .fontWeight(.semibold)
-                .foregroundColor(ThemeColors.Text.primary(isDarkMode))
+                .foregroundColor(.white)
                 .multilineTextAlignment(.center)
             Text(record.date)
                 .font(.custom("Fredoka", size: 16))
                 .fontWeight(.medium)
-                .foregroundColor(Color.gray)
+                .foregroundColor(Color.white)
         }
-        .padding([.leading,.trailing])
-        .frame(width: 160, height: 220) // Adjusted height to make cards taller
-        .background(ThemeColors.Card.background(isDarkMode))
+
+        .frame(width: 150, height: 220) // Adjusted height to make cards taller
+        .background(Color(red:210/255, green:140/255, blue:55/255))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
+                .stroke(Color(red:228/255, green:166/255, blue:95/255), lineWidth: 2)
         )
     }
 }
@@ -102,8 +102,9 @@ struct RecordsView: View {
                     RecordCardView(record: record, isDarkMode: isDarkMode)
                 }
             }
-            .padding()
+            .padding(.horizontal)
         }
+        .padding(.vertical, 8)
     }
 }
 
@@ -127,15 +128,15 @@ struct NewProgressBar: View {
             ZStack(alignment: .leading) {
                 // Background Rectangle
                 Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 16)
+                    .fill(Color(red:211/255, green:211/255, blue:211/255))
+                    .frame(height: 20)
                     .cornerRadius(8)
                     .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
                 
                 // Progress Rectangle
                 Rectangle()
                     .fill(color)
-                    .frame(width: CGFloat(progress) * geometry.size.width, height: 16)
+                    .frame(width: CGFloat(progress) * geometry.size.width, height: 20)
                     .cornerRadius(8)
                     .shadow(color: color.opacity(0.3), radius: 2, x: 0, y: -1)
                 
@@ -145,6 +146,7 @@ struct NewProgressBar: View {
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
                     .font(.custom("Fredoka", size: 16))
+                    .tracking(1.5)
                     .fontWeight(.bold)
                     .animation(.easeInOut(duration: 0.2), value: progress)
             }
@@ -195,10 +197,10 @@ struct AwardItemView: View {
     
     private var iconBackground: some View {
         RoundedRectangle(cornerRadius: 8)
-            .fill(isUnlocked ? color.opacity(0.2) : Color.gray.opacity(0.1))
+            .fill(isUnlocked ? color : Color(red: 211/255, green:211/255, blue:211/255))
             .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isUnlocked ? color : Color.gray.opacity(0.3), lineWidth: 2)
+               RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(Color.black.opacity(0.1), lineWidth: 2)
             )
             .frame(width: 65, height: 65)
             .rotationEffect(.degrees(45))
@@ -209,7 +211,7 @@ struct AwardItemView: View {
             if isSystemIcon {
                 Image(systemName: icon)
                     .font(.system(size: 24))
-                    .foregroundColor(isUnlocked ? color : Color.gray.opacity(0.5))
+                    .foregroundColor(isUnlocked ? .white : Color(red:231/255, green:231/255, blue:231/255))
             } else {
                 customIcon
             }
@@ -224,7 +226,7 @@ struct AwardItemView: View {
                     .scaledToFit()
                     .frame(width: 40, height: 40)
             } else {
-                Image(isDarkMode ? "\(icon)_dark" : "\(icon)_light")
+                Image("\(icon)_light")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 40, height: 40)
@@ -234,9 +236,9 @@ struct AwardItemView: View {
     
     private var awardText: some View {
         Text(text)
-            .font(.custom("Fredoka", size: 16))
+            .font(.custom("Fredoka", size: 18))
             .fontWeight(isUnlocked ? .semibold : .medium)
-            .foregroundColor(isUnlocked ? (ThemeColors.Text.primary(isDarkMode)) : Color.gray)
+            .foregroundColor(isUnlocked ? .white : Color(red: 231/255, green:231/255, blue:231/255))
             .multilineTextAlignment(.center)
             .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
@@ -257,7 +259,7 @@ struct AwardSheetView: View {
     
     var body: some View {
         ZStack {
-            ThemeColors.Background.primary(isDarkMode)
+            Color(red:149/255, green:86/255, blue:14/255)
                 .ignoresSafeArea()
             
             VStack(alignment: .center, spacing: 24) {
@@ -296,13 +298,13 @@ struct AwardSheetView: View {
                 Text(detail)
                     .font(.custom("Fredoka", size: 18))
                     .fontWeight(.medium)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color(red: 231/255, green:231/255, blue:231/255))
                     .multilineTextAlignment(.center)
             } else {
                 Text("You have unlocked this award. Nice Job!")
                     .font(.custom("Fredoka", size: 18))
                     .fontWeight(.medium)
-                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
+                    .foregroundColor(.white)
                     .multilineTextAlignment(.center)
             }
         }
@@ -346,14 +348,14 @@ struct AwardsView: View {
             }
         }
         .padding()
-        .background(.clear)
+        .background(Color(red:210/255, green:140/255, blue:55/255))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
+                .stroke(Color(red:228/255, green:166/255, blue:95/255), lineWidth: 2)
         )
         .padding(.horizontal)
-        .sheet(isPresented: $showAwardSheet) {
+        .sheet(isPresented: $showAwardSheet) { [selectedAward] in
             let award = selectedAward
             
             AwardSheetView(
@@ -387,7 +389,7 @@ struct AwardsView: View {
     private var sectionDivider: some View {
         Divider()
             .frame(height: 2)
-            .overlay(ThemeColors.Content.border(isDarkMode))
+            .overlay(Color(red:228/255, green:166/255, blue:95/255))
             .padding(.horizontal, -32)
             .padding(.top)
             .padding(.bottom, -6)
@@ -430,14 +432,14 @@ enum AwardCategory: CaseIterable {
         switch self {
         case .streak:
             return [
-                Award(icon: "star.fill", text: "First Steps", isUnlocked: true, color: .yellow, isSystemIcon: true, currActions: viewModel.highStreak, maxActions: 1, detail: "Complete your first quest to unlock this award."),
+                Award(icon: "star.fill", text: "First Steps", isUnlocked: viewModel.firstAwardUnlocked, color: .yellow, isSystemIcon: true, currActions: viewModel.highStreak, maxActions: 1, detail: "Complete your first quest to unlock this award."),
                 Award(icon: "flame.fill", text: "On Fire", isUnlocked: false, color: .orange, isSystemIcon: true, currActions: viewModel.highStreak, maxActions: 10, detail: "Reach a 10 day streak to unlock this award."),
                 Award(icon: "medal.fill", text: "Dedicated", isUnlocked: false, color: .red, isSystemIcon: true, currActions: viewModel.highStreak, maxActions: 100, detail: "Reach a 100 day streak to unlock this award.")
             ]
         case .level:
             return [
-                Award(icon: "star", text: "Novice", isUnlocked: true, color: Color.pink, isSystemIcon: true, currActions: Level(totalPoints: viewModel.totalpoints).levelNum, maxActions: 1, detail: "Reach level 1 to unlock this award"),
-                Award(icon: "star.lefthalf.fill", text: "Adept", isUnlocked: true, color: Color.red, isSystemIcon: true, currActions: Level(totalPoints: viewModel.totalpoints).levelNum, maxActions: 2, detail: "Reach level 2 to unlock this award"),
+                Award(icon: "star", text: "Novice", isUnlocked: false, color: Color.pink, isSystemIcon: true, currActions: Level(totalPoints: viewModel.totalpoints).levelNum, maxActions: 1, detail: "Reach level 1 to unlock this award"),
+                Award(icon: "star.lefthalf.fill", text: "Adept", isUnlocked: false, color: Color.red, isSystemIcon: true, currActions: Level(totalPoints: viewModel.totalpoints).levelNum, maxActions: 2, detail: "Reach level 2 to unlock this award"),
                 Award(icon: "star.fill", text: "Fighter", isUnlocked: false, color: Color.orange, isSystemIcon: true, currActions: Level(totalPoints: viewModel.totalpoints).levelNum, maxActions: 3, detail: "Reach level 3 to unlock this award"),
                 Award(icon: "shield", text: "Defender", isUnlocked: false, color: Color.brown, isSystemIcon: true, currActions: Level(totalPoints: viewModel.totalpoints).levelNum, maxActions: 4, detail: "Reach level 4 to unlock this award"),
                 Award(icon: "shield.fill", text: "Guardian", isUnlocked: false, color: Color.green, isSystemIcon: true, currActions: Level(totalPoints: viewModel.totalpoints).levelNum, maxActions: 5, detail: "Reach level 5 to unlock this award"),
@@ -449,29 +451,29 @@ enum AwardCategory: CaseIterable {
             ]
         case .co2:
             return [
-                Award(icon: "leaf.fill", text: "10 kg CO2 Saved", isUnlocked: true, color: Color.green, isSystemIcon: true, currActions: viewModel.co2, maxActions: 10, detail: "Save a total of 10 kg of CO2 to unlock this award."),
-                Award(icon: "leaf.fill", text: "50 kg CO2 Saved", isUnlocked: true, color: Color.brown, isSystemIcon: true, currActions: viewModel.co2, maxActions: 50, detail: "Save a total of 50 kg of CO2 to unlock this award."),
+                Award(icon: "leaf.fill", text: "10 kg CO2 Saved", isUnlocked: false, color: Color.green, isSystemIcon: true, currActions: viewModel.co2, maxActions: 10, detail: "Save a total of 10 kg of CO2 to unlock this award."),
+                Award(icon: "leaf.fill", text: "50 kg CO2 Saved", isUnlocked: false, color: Color.brown, isSystemIcon: true, currActions: viewModel.co2, maxActions: 50, detail: "Save a total of 50 kg of CO2 to unlock this award."),
                 Award(icon: "polar_bear", text: "100 kg CO2 Saved", isUnlocked: false, color: Color.cyan, isSystemIcon: false, currActions: viewModel.co2, maxActions: 100, detail: "Save a total of 100 kg of CO2 to unlock this award.")
             ]
         
         case .energy:
             return [
-                Award(icon: "bolt.fill", text: "100 kWh Saved", isUnlocked: true, color: Color.yellow, isSystemIcon: true, currActions: viewModel.energy, maxActions: 100, detail: "Save a total of 100 kWh of energy to unlock this award."),
-                Award(icon: "bolt.fill", text: "500 kWh Saved", isUnlocked: true, color: Color.orange, isSystemIcon: true, currActions: viewModel.energy, maxActions: 500, detail: "Save a total of 500 kWh of energy to unlock this award."),
+                Award(icon: "bolt.fill", text: "100 kWh Saved", isUnlocked: false, color: Color.yellow, isSystemIcon: true, currActions: viewModel.energy, maxActions: 100, detail: "Save a total of 100 kWh of energy to unlock this award."),
+                Award(icon: "bolt.fill", text: "500 kWh Saved", isUnlocked: false, color: Color.orange, isSystemIcon: true, currActions: viewModel.energy, maxActions: 500, detail: "Save a total of 500 kWh of energy to unlock this award."),
                 Award(icon: "pika", text: "1000 kWh Saved", isUnlocked: false, color: Color.red, isSystemIcon: false, currActions: viewModel.energy, maxActions: 1000, detail: "Save a total of 1000 kWh of energy to unlock this award.")
         ]
         
         case .bottles:
             return [
-                Award(icon: "drop.fill", text: "10 Bottles Saved", isUnlocked: true, color: Color.teal, isSystemIcon: true, currActions: viewModel.bottles, maxActions: 10, detail: "Save a total of 10 plastic bottles to unlock this award."),
-                Award (icon: "drop.fill", text: "50 Bottles Saved", isUnlocked: true, color: Color.blue, isSystemIcon: true, currActions: viewModel.bottles, maxActions: 50, detail: "Save a total of 50 plastic bottles to unlock this award."),
+                Award(icon: "drop.fill", text: "10 Bottles Saved", isUnlocked: false, color: Color.teal, isSystemIcon: true, currActions: viewModel.bottles, maxActions: 10, detail: "Save a total of 10 plastic bottles to unlock this award."),
+                Award (icon: "drop.fill", text: "50 Bottles Saved", isUnlocked: false, color: Color.blue, isSystemIcon: true, currActions: viewModel.bottles, maxActions: 50, detail: "Save a total of 50 plastic bottles to unlock this award."),
                 Award(icon: "turtle", text: "100 Bottles Saved", isUnlocked: false, color: Color.blue, isSystemIcon: false, currActions: viewModel.bottles, maxActions: 100, detail: "Save a total of 100 plastic bottles to unlock this award.")
         ]
         
         case .waste:
             return [
-            Award(icon: "trash.fill", text: "5 kg Waste Saved", isUnlocked: true, color: Color.purple, isSystemIcon: true, currActions: viewModel.bottles, maxActions: 5, detail: "Reduce a total of 5 kg of waste to unlock this award."),
-            Award(icon: "trash.fill", text: "25 kg Waste Saved", isUnlocked: true, color: Color.indigo, isSystemIcon: true, currActions: viewModel.bottles, maxActions: 25, detail: "Reduce a total of 25 kg of waste to unlock this award."),
+            Award(icon: "trash.fill", text: "5 kg Waste Saved", isUnlocked: false, color: Color.purple, isSystemIcon: true, currActions: viewModel.bottles, maxActions: 5, detail: "Reduce a total of 5 kg of waste to unlock this award."),
+            Award(icon: "trash.fill", text: "25 kg Waste Saved", isUnlocked: false, color: Color.indigo, isSystemIcon: true, currActions: viewModel.bottles, maxActions: 25, detail: "Reduce a total of 25 kg of waste to unlock this award."),
             Award(icon: "elephant", text: "50 kg Waste Saved", isUnlocked: false, color: Color.indigo, isSystemIcon: false, currActions: viewModel.bottles, maxActions: 50, detail: "Reduce a total of 50 kg of waste to unlock this award.")
         ]
         default:
@@ -487,12 +489,12 @@ extension AwardsView {
             Text(title)
                 .font(.custom("Fredoka", size: 22))
                 .fontWeight(.semibold)
-                .foregroundColor(ThemeColors.Text.primary(isDarkMode))
+                .foregroundColor(.white)
             Spacer()
             Text("\(awards.filter { $0.isUnlocked }.count) of \(awards.count)")
                 .font(.custom("Fredoka", size: 18))
                 .fontWeight(.medium)
-                .foregroundColor(.gray)
+                .foregroundColor(Color(red: 232/255, green:232/255, blue:232/255))
         }
         .background(.clear)
     }
@@ -523,6 +525,7 @@ extension AwardsView {
                         .buttonStyle(PlainButtonStyle()) // Ensure the button does not have a default style that alters appearance
                     }
             }
+            .background(.clear)
         }
     }
 }

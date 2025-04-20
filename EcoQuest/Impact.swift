@@ -45,7 +45,7 @@ struct ImpactView: View {
                         startRadius: isDarkMode ? 50 : 100,
                         endRadius: isDarkMode ? 300 : 300
                     )
-                    .frame(height: 605)
+                    .frame(height: 620)
                     .ignoresSafeArea()
                     
                     ZStack(alignment: .center) {
@@ -199,10 +199,7 @@ struct CompactImpactBarView: View {
         .padding(.horizontal, 10)
         .background(ThemeColors.Card.background(isDarkMode))
         .cornerRadius(18)
-        .overlay(
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
-        )
+        .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y:5)
         .padding(10)
         
     }
@@ -219,10 +216,12 @@ struct CompactCompactCardView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Image(systemName: card.icon)
-                .font(.system(size: 24))
-                .foregroundStyle(card.text)
-                .frame(width: 24, height: 24)
+            ZStack {
+                Image(systemName: card.icon)
+                    .font(.system(size: 24))
+                    .foregroundStyle(card.text)
+                    .frame(width: 24, height: 24)
+            }
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 2) {

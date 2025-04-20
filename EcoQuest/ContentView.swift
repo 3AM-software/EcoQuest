@@ -3,8 +3,10 @@ import Foundation
 import UIKit
 import AVFoundation
 import Combine
-import ConfettiSwiftUI
-
+import FirebaseFirestore
+import FirebaseAuth
+import CoreHaptics
+import AVFoundation
 
 struct ThemeColors {
     static let primary = Color(red: 22/255, green: 162/255, blue: 74/255)
@@ -43,6 +45,12 @@ struct ThemeColors {
 }
 
 class UserViewModel: ObservableObject {
+    private let db = Firestore.firestore()
+    
+    private var uid: String? {
+        return Auth.auth().currentUser?.uid
+    }
+
     @Published var showAwardPopup = false
     @Published var awardNum = 0
 
@@ -182,6 +190,12 @@ class UserViewModel: ObservableObject {
                 UserDefaults.standard.set(firstAwardUnlocked, forKey: "firstAwardUnlocked")
             }
         }
+    @Published var showDevMenu: Bool = false {
+        didSet {
+            UserDefaults.standard.set(showDevMenu, forKey: "showDevMenu")
+        }
+    }
+    
 
     init() {
         self.totalpoints = UserDefaults.standard.integer(forKey: "totalPoints")
@@ -207,12 +221,14 @@ class UserViewModel: ObservableObject {
         self.numQuests = UserDefaults.standard.integer(forKey: "numQuests")
         self.trees = UserDefaults.standard.integer(forKey: "trees")
         self.trips = UserDefaults.standard.integer(forKey: "trips")
+        self.showDevMenu = UserDefaults.standard.bool(forKey: "showDevMenu")
     }
     
     func checkAndUpdateStreak() {
+        print("Checking Streak")
         let calendar = Calendar.current
-        if calendar.isDateInYesterday(lastActionDate) {
-            // If the last action date was yesterday, continue the streak
+        if calendar.isDateInYesterday(lastActionDate) || totalpoints == 0 {
+            // If the last action date was yesterday or the user has no total points, continue the streak
             incrementStreak()
             if streak > highStreak {
                 setHighestStreak(streak)
@@ -246,7 +262,29 @@ class UserViewModel: ObservableObject {
             }
             awardNum = 0
         }
+        
+        updateLeaderboardInFirestore()
     }
+    
+    private func updateLeaderboardInFirestore() {
+        guard let uid = uid else { return }
+        
+        let leaderboardRef = db.collection("leaderboard").document(uid)
+        
+        leaderboardRef.setData([
+            "uid": uid,
+            "displayName": Auth.auth().currentUser?.displayName ?? "Unknown",
+            "dailyPoints": todaypoints,
+            "allTimePoints": totalpoints
+        ], merge: true) { error in
+            if let error = error {
+                print("Error updating leaderboard: \(error.localizedDescription)")
+            } else {
+                print("Leaderboard successfully updated.")
+            }
+        }
+    }
+
     
     func showAwardPopupWithDelay() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -295,7 +333,7 @@ class UserViewModel: ObservableObject {
     func resetAll() {
         totalpoints = 0
         todaypoints = 0
-        streak = 0
+        resetStreak()
         highStreak = 0
         co2 = 0
         trees = 0
@@ -308,6 +346,7 @@ class UserViewModel: ObservableObject {
         dateOfHighestStreak = nil
         dateOfNumQuests = nil
         numQuests = 0
+        addPoints(0)
     }
 
     func incrementStreak() {
@@ -315,7 +354,7 @@ class UserViewModel: ObservableObject {
     }
 
     func resetStreak() {
-        streak = 1
+        streak = 0
     }
 }
 
@@ -366,13 +405,15 @@ struct AwardPopupView: View {
                 
                 // Title
                 Text(title)
-                    .font(.title)
+                    .font(.custom("Fredoka", size: 24))
+                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
                     .fontWeight(.bold)
                 
                 // Message
                 Text("You have unlocked the \(awards[awardNum].text) award!")
+                    .font(.custom("Fredoka", size: 16))
                     .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
                 
                 // Celebration effects
                 HStack(spacing: 15) {
@@ -391,6 +432,7 @@ struct AwardPopupView: View {
                     }
                 }) {
                     Text("Continue")
+                        .font(.custom("Fredoka", size: 20))
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(width: 200)
@@ -478,22 +520,366 @@ struct ErrorOverlay: View {
     }
 }
 
+struct DeveloperToolbarView: View {
+    @Binding var showDevMenu: Bool
+    @StateObject private var authViewModel = UserAuthViewModel()
+    @StateObject private var userViewModel = UserViewModel()
+    @State private var engine: CHHapticEngine?
+    
+    // Animation states for buttons
+    @State private var logoutScale: CGFloat = 1
+    @State private var resetScale: CGFloat = 1
+    @State private var closeScale: CGFloat = 1
+    
+    var body: some View {
+        VStack(alignment: .trailing) {
+            Spacer()
+            HStack {
+                Spacer()
+                VStack(spacing: 16) {
+                    // Force Log Out Button
+                    DevMenuButton(
+                        title: "Force Log Out",
+                        icon: "lock.open",
+                        color: Color.red,
+                        buttonScale: $logoutScale,
+                        action: {
+                            triggerHaptic(.heavy)
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                logoutScale = 0.95
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    logoutScale = 1
+                                }
+                                authViewModel.logOut()
+                            }
+                        }
+                    )
+                    
+                    // Reset All Button
+                    DevMenuButton(
+                        title: "Reset All Data",
+                        icon: "arrow.triangle.2.circlepath",
+                        color: Color.blue,
+                        buttonScale: $resetScale,
+                        action: {
+                            triggerHaptic(.medium)
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                resetScale = 0.95
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    resetScale = 1
+                                }
+                                userViewModel.resetAll()
+                            }
+                        }
+                    )
+                    
+                    // Close Button
+                    DevMenuButton(
+                        title: "Close Menu",
+                        icon: "xmark.circle",
+                        color: Color.gray.opacity(0.3),
+                        textColor: Color.primary,
+                        buttonScale: $closeScale,
+                        action: {
+                            triggerHaptic(.light)
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                closeScale = 0.95
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    closeScale = 1
+                                }
+                                withAnimation(.easeOut(duration: 0.2)) {
+                                    showDevMenu = false
+                                }
+                            }
+                        }
+                    )
+                }
+                .padding(.vertical, 24)
+                .padding(.horizontal, 16)
+                .background(
+                    ZStack {
+                        Color.black.opacity(0.7)
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.ultraThinMaterial)
+                    }
+                )
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.3), radius: 15, x: 0, y: 5)
+                .padding()
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showDevMenu)
+        .onAppear(perform: prepareHaptics)
+    }
+    
+    // Setup haptic engine
+    func prepareHaptics() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        
+        do {
+            engine = try CHHapticEngine()
+            try engine?.start()
+        } catch {
+            print("There was an error creating the haptic engine: \(error.localizedDescription)")
+        }
+    }
+    
+    // Different haptic feedback styles
+    enum HapticStyle {
+        case light, medium, heavy
+    }
+    
+    // Function to trigger haptic feedback
+    func triggerHaptic(_ style: HapticStyle) {
+        // Fallback haptic for devices without CHHapticEngine
+        let generator: UIImpactFeedbackGenerator
+        switch style {
+        case .light:
+            generator = UIImpactFeedbackGenerator(style: .light)
+        case .medium:
+            generator = UIImpactFeedbackGenerator(style: .medium)
+        case .heavy:
+            generator = UIImpactFeedbackGenerator(style: .heavy)
+        }
+        generator.impactOccurred()
+        
+        // Advanced haptics for supported devices
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics,
+              let engine = engine else { return }
+        
+        var events = [CHHapticEvent]()
+        let intensity: Float
+        let sharpness: Float
+        
+        switch style {
+        case .light:
+            intensity = 0.5
+            sharpness = 0.5
+        case .medium:
+            intensity = 0.8
+            sharpness = 0.4
+        case .heavy:
+            intensity = 1.0
+            sharpness = 0.3
+        }
+        
+        let intensityParameter = CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity)
+        let sharpnessParameter = CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
+        
+        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensityParameter, sharpnessParameter], relativeTime: 0)
+        events.append(event)
+        
+        do {
+            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let player = try engine.makePlayer(with: pattern)
+            try player.start(atTime: 0)
+        } catch {
+            print("Failed to play haptic pattern: \(error.localizedDescription)")
+        }
+    }
+}
+
+// Reusable button component for the dev menu
+struct DevMenuButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let textColor: Color
+    let action: () -> Void
+    @Binding var buttonScale: CGFloat
+    
+    init(title: String, icon: String, color: Color, textColor: Color = .white, buttonScale: Binding<CGFloat>, action: @escaping () -> Void) {
+        self.title = title
+        self.icon = icon
+        self.color = color
+        self.textColor = textColor
+        self.action = action
+        self._buttonScale = buttonScale
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(textColor)
+                
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(textColor)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14))
+                    .foregroundColor(textColor.opacity(0.7))
+            }
+            .padding(.vertical, 14)
+            .padding(.horizontal, 18)
+            .background(color)
+            .cornerRadius(12)
+            .shadow(color: color.opacity(0.4), radius: 5, x: 0, y: 3)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+            )
+            .scaleEffect(buttonScale)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+
 
 struct ContentView: View {
-    @State private var isLoading = false
+    @State private var isLoading = true
+    @StateObject private var authViewModel = UserAuthViewModel()
+    @StateObject private var userViewModel = UserViewModel()
+    @State private var showMainApp: Bool
+    
+    init() {
+        _showMainApp = State(initialValue: UserAuthViewModel().isLoggedIn)
+    }
+
     var body: some View {
         Group {
             if isLoading {
                 LoadingScreen()
             } else {
-                MainApp()
+                if authViewModel.isLoggedIn {
+                    ZStack {
+                        if showMainApp {
+                            MainApp()
+                                .transition(.move(edge: .trailing)) // This animates the main app entering from the right
+                        }
+                        
+                        if userViewModel.showDevMenu {
+                            DeveloperToolbarView(showDevMenu: $userViewModel.showDevMenu)
+                        }
+                    }
+                    .onAppear {
+                        // Start the animation when the login view is completed and the app is logged in
+                        withAnimation(.easeInOut(duration: 1)) {
+                            showMainApp = true
+                        }
+                    }
+                } else {
+                    LoginView(authViewModel: authViewModel)
+                        .background(Color(red: 123/255, green: 182/255, blue: 92/255))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea(edges: .top)
+                        .onAppear {
+                            // Reset the main app view visibility when showing login
+                            showMainApp = false
+                        }
+                }
             }
         }
+        .background(Color(red: 123/255, green: 182/255, blue: 92/255))
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 isLoading = false
             }
         }
+        .onTapGesture(count: 3) {
+            userViewModel.showDevMenu.toggle()
+        }
+    }
+}
+
+
+struct LoginView: View {
+    @State private var email = ""
+    @State private var password = ""
+    @ObservedObject var authViewModel: UserAuthViewModel
+    @State private var username = ""
+
+    var body: some View {
+        ZStack {
+            Color(red:123/255, green:182/255, blue:92/255)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea(.all)
+            VStack(alignment: .center, spacing: 20) {
+                Text("EcoQuest")
+                    .font(.custom("Fredoka", size: 28))
+                    .tracking(-0.5)
+                    .fontWeight(.heavy)
+                    .foregroundColor(.white)
+                    .padding(.top, 64)
+                Spacer()
+                TextField("", text: $username, prompt: Text("Username").foregroundColor(Color(red: 229/255, green: 229/255, blue: 229/255)))
+                    .autocapitalization(.none)
+                    .padding()
+                    .frame(height: 55)
+                    .foregroundColor(Color.gray)
+                    .background(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 100)
+                            .stroke(Color(red: 229/255, green: 229/255, blue: 229/255), lineWidth: 3)
+                    )
+                    .cornerRadius(100)
+                    .padding(.horizontal)
+                TextField("", text: $email, prompt: Text("Email").foregroundColor(Color(red: 229/255, green: 229/255, blue: 229/255)))
+                    .autocapitalization(.none)
+                    .keyboardType(.emailAddress)
+                    .padding()
+                    .frame(height: 55)
+                    .foregroundColor(Color.gray)
+                    .background(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 100)
+                            .stroke(Color(red: 229/255, green: 229/255, blue: 229/255), lineWidth: 3)
+                    )
+                    .cornerRadius(100)
+                    .padding(.horizontal)
+                SecureField("", text: $password, prompt: Text("Password").foregroundColor(Color(red: 229/255, green: 229/255, blue: 229/255)) )
+                    .padding()
+                    .frame(height: 55)
+                    .background(Color.white)
+                    .foregroundColor(Color.gray)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 100)
+                            .stroke(Color(red: 229/255, green: 229/255, blue: 229/255), lineWidth: 3)
+                    )
+                    .cornerRadius(100)
+                    .padding(.horizontal)
+                Button(action: {
+                    authViewModel.logIn(email: email, password: password)
+                }) {
+                    Text("Log In")
+                        .foregroundColor(Color(red:123/255, green:182/255, blue:92/255))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
+                }
+                .padding(.horizontal)
+                Button(action: {
+                    authViewModel.signUp(email: email, password: password, displayName: username)
+                }) {
+                    Text("Sign Up")
+                        .foregroundColor(.white)
+                        .underline()
+                }
+                .padding(.bottom, 8)
+
+                if let error = authViewModel.authError {
+                    Text(error).foregroundColor(.red)
+                }
+            }
+        }
+        .padding()
     }
 }
 
@@ -504,6 +890,7 @@ struct MainApp: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var selectedDetent: PresentationDetent = .height(700)
     @StateObject private var userViewModel = UserViewModel()
+    @StateObject private var authViewModel = UserAuthViewModel()
     
     @State private var lastRunDate: Date = Date.distantPast
     @State private var countdown: String = "24:00" // To hold the countdown string
@@ -525,15 +912,18 @@ struct MainApp: View {
                 HeaderTitleView()
                 if selectedTab == "Impact"{
                     Text("Your Impact")
-                        .font(.custom("Fredoka", size: 24))
+                        .font(.custom("Fredoka", size: 20))
                         .fontWeight(.semibold)
-                        .foregroundColor(ThemeColors.Text.primary(isDarkMode))
-                        .padding(.vertical, 12) // Add top padding if needed
+                        .foregroundColor(.white)
+                        .padding(.bottom, 8) // Add top padding if needed
+                        .padding(.top, -4)
                         .frame(maxWidth: .infinity) // Makes the text occupy full width
                         .multilineTextAlignment(.center) // Center-align the text
+                        .background(Color(red:123/255, green:182/255, blue:92/255))
                     Rectangle()
                         .frame(height: 2)
-                        .foregroundColor(ThemeColors.Content.border(isDarkMode))
+                        .foregroundColor(.black.opacity(0.1))
+                        .padding(.top, -2)
                 }
                 
                 VStack(alignment: .center) {
@@ -555,67 +945,91 @@ struct MainApp: View {
                     }
                     else if selectedTab == "Home" {
                         ScrollView {
-                            VStack {
-                                ProfileInfoView(userViewModel: userViewModel)
-                                    .edgesIgnoringSafeArea(.top)
-                                    .padding(.top, -370)
+                            ZStack {
+                                // Green background
+                                Color(red:123/255, green:182/255, blue:92/255)
+
+                                VStack(spacing: 0) {
+                                    // Top section (green background)
+                                    ProfileInfoView(userViewModel: userViewModel)
+                                        .edgesIgnoringSafeArea(.top)
+                                        .padding(.top, -370)
+                                        .transition(.opacity)
+
+                                    StreakBadge(isDarkMode: isDarkMode, userViewModel: userViewModel)
+                                        .transition(.opacity)
+
+                                    // Bottom section (brown background)
+                                    VStack(spacing: 0) {
+                                        HStack {
+                                            Text("Daily Quests")
+                                                .font(.custom("Fredoka", size: 24))
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.white)
+                                            Spacer()
+                                            Image(systemName: "clock")
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(.white)
+                                            Text(countdown)
+                                                .font(.custom("Fredoka", size: 16))
+                                                .foregroundColor(.white)
+                                                .fontWeight(.medium)
+                                        }
+                                        .padding(.horizontal, 24)
+                                        .padding(.vertical)
+
+                                        NewQuestView(isDarkMode: isDarkMode, userViewModel: userViewModel)
+                                            .transition(.opacity)
+                                            .padding(.bottom, 10)
+                                    }
+                                    .background(Color(red: 227/255, green: 179/255, blue:113/255))
+                                    .clipShape(RoundedCorner(radius: 24, corners: [.topLeft, .topRight]))
                                     .transition(.opacity)
-                                StreakBadge(isDarkMode: isDarkMode, userViewModel: userViewModel)
-                                    .transition(.opacity)
-                                
-                                HStack {
-                                    Text("Daily Quests")
-                                        .font(.custom("Fredoka", size: 24))
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(ThemeColors.Text.primary(isDarkMode))
-                                    Spacer()
-                                    Image(systemName: "clock")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.orange)
-                                    
-                                    Text(countdown)
-                                        .font(.custom("Fredoka",size:16))
-                                        .foregroundColor(.orange)
-                                        .fontWeight(.medium)
                                 }
-                                .padding(.horizontal)
-                                .padding(.top,-10)
-                                
-                                NewQuestView(isDarkMode: isDarkMode, userViewModel: userViewModel)
-                                    .transition(.opacity)
-                                    .padding(.bottom, 10)
                             }
+
                         }
                     } else if selectedTab == "Awards" {
                         ScrollView {
-                            HStack {
-                                Text("Personal Records")
-                                    .font(.custom("Fredoka", size: 24))
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
-                                Spacer()
-                            }
-                            .padding(.horizontal)
-                            .padding(.top)
-                            RecordsView(userViewModel: userViewModel, isDarkMode: isDarkMode)
-                                .transition(.opacity)
-                                .padding(.top, -16)
-                            HStack {
-                                Text("Awards")
-                                    .font(.custom("Fredoka", size: 24))
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
-                                Spacer()
+                            ZStack {
+                                Color(red:149/255, green:86/255, blue:14/255)
+                                VStack {
+                                    HStack {
+                                        Text("Personal Records")
+                                            .font(.custom("Fredoka", size: 24))
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                        Spacer()
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color(red:119/255, green:60/255, blue:0/255))
+
                                 
+                                    RecordsView(userViewModel: userViewModel, isDarkMode: isDarkMode)
+                                        .transition(.opacity)
+                                    
+                                        
+                                    HStack {
+                                        Text("Awards")
+                                            .font(.custom("Fredoka", size: 24))
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                        Spacer()
+                                        
+                                    }
+                                    .padding()
+                                    .background(Color(red:119/255, green:60/255, blue:0/255))
+
+                                    AwardsView(userViewModel: userViewModel, isDarkMode: isDarkMode)
+                                        .transition(.opacity)
+                                        .padding(.vertical)
+                                }
                             }
-                            .padding(.horizontal)
-                            AwardsView(userViewModel: userViewModel, isDarkMode: isDarkMode)
-                                .transition(.opacity)
-                                .padding(.bottom)
                         }
                     } else if selectedTab == "Friends" {
                         ScrollView {
-                            Community(userViewModel: userViewModel, isDarkMode: isDarkMode, communityTab: communityTab)
+                            Community(userViewModel: userViewModel, authViewModel: authViewModel, isDarkMode: isDarkMode, communityTab: communityTab)
                                 .transition(.opacity)
                                 .padding(.bottom)
                         }
@@ -688,7 +1102,6 @@ struct MainApp: View {
             }
             
         }
-        .confettiCannon(trigger: $globalState.counter)
     }
     
     private func startTimer() {
@@ -743,24 +1156,20 @@ struct MainApp: View {
     
     var bottomNavBar: some View {
         HStack {
-            ForEach(["Impact", "Awards", "Home", "Friends", "Profile", "Settings"], id: \.self) { icon in
+            ForEach(["Impact", "Awards", "Home", "Friends", "Settings"], id: \.self) { icon in
                 ZStack {
                     if selectedTab == icon {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.green.opacity(0.15))
-                            .frame(width: 40, height: 40)
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.15))
+                            .frame(width: 52, height: 52)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(.green, lineWidth: 2)
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(.white, lineWidth: 2)
                             )
                     }
                     
-                    Image(systemName: getSystemImage(for: icon))
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 28, height: 28)
+                    getCustomTabIcon(for: icon, isSelected: selectedTab == icon)
                 }
-                .foregroundColor(selectedTab == icon ? Color.green : .gray)
                 .frame(maxWidth: .infinity)
                 .onTapGesture {
                     if icon == "Settings" {
@@ -776,26 +1185,97 @@ struct MainApp: View {
             }
         }
         .padding(.horizontal)
-        .padding(.top, 12)
-        .padding(.bottom, 32)
-        .background(Color.gray.opacity(0.1))
+        .padding(.top, 22)
+        .padding(.bottom, 36)
+        .background(getNavBarBackgroundColor(for: selectedTab))
         .overlay(
             Rectangle()
-                .frame(height: 2)
-                .foregroundColor(.gray.opacity(0.2)),
+                .frame(height: 3)
+                .foregroundColor(.black.opacity(0.15))
+                .padding(.bottom, -2),
             alignment: .top
         )
     }
-    
-    func getSystemImage(for icon: String) -> String {
+
+    // Function to return custom views for each tab icon
+    func getCustomTabIcon(for icon: String, isSelected: Bool) -> AnyView {
         switch icon {
-        case "Impact": return "globe.americas.fill"
-        case "Home": return "house.fill"
-        case "Awards": return "medal.fill"
-        case "Settings": return "gearshape.fill"
-        case "Friends": return "trophy.fill"
-        case "Profile": return "person.fill"
-        default: return "leaf"
+        case "Impact":
+            return AnyView (
+                ZStack {
+                Circle()
+                    .frame(width: 36, height:30)
+                    .foregroundColor(.cyan)
+                Image(systemName: "globe.americas.fill")
+                    .font(.system(size: 36, weight: .regular))
+                    .foregroundColor(.green)
+                Image(systemName: "globe.americas")
+                        .font(.system(size: 36, weight: .medium))
+                    .foregroundColor(.white)
+            }
+                )
+        case "Awards":
+            return AnyView (ZStack {
+                Image(systemName: "checkmark.seal.fill")
+                    .symbolRenderingMode(.palette)
+                    .font(.system(size: 36, weight: .medium))
+                    .foregroundStyle(Color(red: 0.72, green: 0.55, blue: 0.11), Color(red: 1.0, green: 0.8, blue: 0.267))
+                    .scaledToFit()
+                Image(systemName: "seal")
+                    .font(.system(size: 36, weight: .medium))
+                    .foregroundColor(.white)
+                
+            }
+                            )
+        case "Home":
+            return AnyView (ZStack {
+                Image(systemName: "house.fill")
+                    .font(.system(size: 32, weight: .ultraLight))
+                    .foregroundColor(.red)
+                Image(systemName: "house")
+                    .font(.system(size: 30, weight: .medium))
+                    .foregroundColor(.white)
+            })
+        case "Friends":
+            return AnyView(ZStack {
+                Image(systemName: "trophy.fill")
+                    .font(.system(size: 32, weight: .regular))
+                    .foregroundColor(Color(red: 206/255, green:137/255, blue:70/255))
+                Image(systemName: "trophy")
+                    .font(.system(size: 32, weight: .medium))
+                    .foregroundColor(.white)
+            })
+        case "Settings":
+            return AnyView(ZStack {
+                // Rotating gear effect when selected
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 32, weight: .regular))
+                    .foregroundColor(Color.gray)
+                Image(systemName: "gearshape")
+                    .font(.system(size: 32, weight: .medium))
+                    .foregroundColor(.white)
+            })
+        default:
+            return AnyView(Image(systemName: "leaf")
+                .font(.system(size: 30, weight: .medium))
+                .foregroundColor(.white)
+                           )
+        }
+    }
+
+    // Function to return background colors for the whole navigation bar
+    func getNavBarBackgroundColor(for selectedTab: String) -> Color {
+        switch selectedTab {
+        case "Impact":
+            return Color(red:123/255, green:182/255, blue:92/255)
+        case "Awards":
+            return Color(red:149/255, green:86/255, blue:14/255)
+        case "Home":
+            return Color(red: 227/255, green: 179/255, blue:113/255)
+        case "Friends":
+            return Color(red:123/255, green:182/255, blue:92/255)
+        default:
+            return Color(red:123/255, green:182/255, blue:92/255)
         }
     }
 }
@@ -803,6 +1283,8 @@ struct MainApp: View {
 struct SettingsView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
     @Environment(\.dismiss) private var dismiss
+    
+    @StateObject private var authViewModel = UserAuthViewModel()
     
     var body: some View {
         NavigationView {
@@ -837,6 +1319,52 @@ struct SettingsView: View {
                     
                    
                     VStack(spacing: 16) {
+                        
+                    
+                        HStack {
+                            Text("Profile")
+                                .font(.custom("Fredoka", size: 16))
+                                .textCase(nil)
+                                .foregroundColor(.gray)
+                                .padding(.top, 8)
+                            Spacer()
+                        }
+                        VStack {
+                            
+                            HStack {
+                                Text("Display Name")
+                                    .font(.custom("Fredoka", size: 16))
+                                    .foregroundColor(.gray)
+                                Spacer()
+                                Text("\(authViewModel.displayName)")
+                                    .font(.custom("Fredoka", size: 16))
+                                    .foregroundColor(ThemeColors.Content.primary(isDarkMode))
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 8)
+                            
+                            Rectangle()
+                                .frame(height: 2)
+                                .frame(maxWidth: .infinity)
+                                .foregroundColor(ThemeColors.Content.border(isDarkMode))
+                            
+                            HStack {
+                                Text("Email")
+                                    .font(.custom("Fredoka", size: 16))
+                                    .foregroundColor(.gray)
+                                Spacer()
+                                Text(authViewModel.email ?? "Not available")
+                                    .font(.custom("Fredoka", size: 16))
+                                    .foregroundColor(ThemeColors.Content.primary(isDarkMode))
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 8)
+                        }
+                        .padding(.vertical, 8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
+                        )
                         
                         HStack {
                             Text("Appearance")
@@ -882,18 +1410,36 @@ struct SettingsView: View {
 struct LoadingScreen: View {
     @State private var progress: CGFloat = 0
     @State private var isAnimating = false
+    @State private var loadingMessage = ""
+    @State private var ecoTip = ""
+
+    
+    let loadingMessages = [
+        "Loading your eco journey...",
+        "Sprouting some green ideas...",
+        "Nurturing your sustainability path...",
+        "Composting unnecessary emissions...",
+        "Recycling bits and bytes...",
+        "Charging your solar panels...",
+        "Planting seeds of change..."
+    ]
+
+    let ecoTips = [
+        "Bamboo grows up to 35 inches per day, making it one of the most sustainable building materials on Earth. Using bamboo products helps reduce deforestation!",
+        "Turning off lights when you leave a room can save up to 10% on your energy bill—and it's better for the planet.",
+        "Recycling one aluminum can saves enough energy to power a TV for three hours!",
+        "A single reusable water bottle can save an average of 167 plastic bottles per year.",
+        "Composting food scraps reduces landfill waste and helps enrich the soil naturally.",
+        "Unplugging electronics when not in use prevents 'phantom' energy drain.",
+        "Switching to LED lightbulbs uses up to 80% less energy than traditional bulbs.",
+        "Eating just one vegetarian meal a week can significantly reduce your carbon footprint."
+    ]
+
 
     var body: some View {
         ZStack {
             // Background gradient
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 22/255, green: 163/255, blue: 74/255),
-                    Color(red: 21/255, green: 128/255, blue: 61/255)
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Color(red:123/255, green:182/255, blue:92/255)
             .ignoresSafeArea()
 
             VStack {
@@ -904,7 +1450,7 @@ struct LoadingScreen: View {
                         .foregroundColor(.white)
                         .frame(width: 80, height: 80)
                         .scaleEffect(isAnimating ? 1.1 : 1.0)
-                        .animation(Animation.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: isAnimating)
+                        .animation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isAnimating)
                         .onAppear {
                             self.isAnimating = true
                         }
@@ -912,7 +1458,8 @@ struct LoadingScreen: View {
                 .padding(.bottom, 20)
 
                 Text("EcoQuest")
-                    .font(.system(size: 36, weight: .bold))
+                    .font(.custom("Fredoka", size: 36))
+                    .fontWeight(.bold)
                     .foregroundColor(.white)
                     .padding(.bottom, 20)
 
@@ -923,7 +1470,7 @@ struct LoadingScreen: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
 
-                    Text("Bamboo grows up to 35 inches per day, making it one of the most sustainable building materials on Earth. Using bamboo products helps reduce deforestation!")
+                    Text(ecoTip)
                         .font(.custom("Fredoka", size: 16))
                         .fontWeight(.medium)
                         .foregroundColor(.white.opacity(0.9))
@@ -941,14 +1488,14 @@ struct LoadingScreen: View {
                         .fill(Color.white.opacity(0.2))
                         .frame(width: 200, height: 10)
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(red:134/255,green:239/255,blue:172/255))
+                        .fill(Color(red: 1.0, green: 0.8, blue: 0.267))
                         .frame(width: progress * 200 / 100, height: 10)
                         .animation(.linear(duration: 0.5), value: progress)
                         .padding(.top, -18)
                 }
                 .padding(.bottom, 10)
 
-                Text("Loading your eco journey...")
+                Text(loadingMessage)
                     .font(.custom("Fredoka", size: 18))
                     .fontWeight(.medium)
                     .foregroundColor(.white)
@@ -956,6 +1503,12 @@ struct LoadingScreen: View {
             .padding()
         }
         .onAppear {
+            self.ecoTip = ecoTips.randomElement() ?? ""
+            self.loadingMessage = loadingMessages.randomElement() ?? "Loading..."
+
+            // Sound will also be triggered here
+            playSound()
+        
             // Simulate loading progress
             Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
                 if self.progress < 100 {
@@ -965,5 +1518,32 @@ struct LoadingScreen: View {
                 }
             }
         }
+    }
+}
+
+var player: AVAudioPlayer?
+
+func playSound() {
+    guard let url = Bundle.main.url(forResource: "leaf-chime", withExtension: "mp3") else { return }
+
+    do {
+        player = try AVAudioPlayer(contentsOf: url)
+        player?.play()
+    } catch {
+        print("Error playing sound: \(error.localizedDescription)")
+    }
+}
+
+struct RoundedCorner: Shape {
+    var radius: CGFloat = .infinity
+    var corners: UIRectCorner = .allCorners
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
     }
 }

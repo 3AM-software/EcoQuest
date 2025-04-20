@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2ED12FC52DB3377C001A2E37 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 2ED12FC42DB3377C001A2E37 /* ConfettiSwiftUI */; };
 		CA2ACB102CC6BF5C00C97111 /* EcoQuestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB0F2CC6BF5C00C97111 /* EcoQuestApp.swift */; };
 		CA2ACB122CC6BF5C00C97111 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB112CC6BF5C00C97111 /* ContentView.swift */; };
 		CA2ACB142CC6BF5E00C97111 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA2ACB132CC6BF5E00C97111 /* Assets.xcassets */; };
@@ -20,6 +19,14 @@
 		CA2ACB482CC97CA500C97111 /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB472CC97CA500C97111 /* Level.swift */; };
 		CA47ED472CC9AE2D0062578B /* EcoQuestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB202CC6BF5F00C97111 /* EcoQuestTests.swift */; };
 		CA47ED4C2CC9C4C90062578B /* Awards.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA47ED4B2CC9C4C90062578B /* Awards.swift */; };
+		CA587BC32DB45FEA00CF7715 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CA587BC22DB45FEA00CF7715 /* GoogleService-Info.plist */; };
+		CA587BC42DB45FEA00CF7715 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CA587BC22DB45FEA00CF7715 /* GoogleService-Info.plist */; };
+		CA587BC52DB45FEA00CF7715 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CA587BC22DB45FEA00CF7715 /* GoogleService-Info.plist */; };
+		CA587BC82DB4611D00CF7715 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = CA587BC72DB4611D00CF7715 /* FirebaseAnalytics */; };
+		CA587BCA2DB4611D00CF7715 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = CA587BC92DB4611D00CF7715 /* FirebaseAuth */; };
+		CA587BCC2DB4611D00CF7715 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = CA587BCB2DB4611D00CF7715 /* FirebaseCore */; };
+		CA587BCF2DB462CC00CF7715 /* UserAuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA587BCE2DB462CC00CF7715 /* UserAuthViewModel.swift */; };
+		CA587BD12DB4751D00CF7715 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = CA587BD02DB4751D00CF7715 /* FirebaseFirestore */; };
 		CA67E24A2CCAB57C00ACFB78 /* Ranchers-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */; };
 		CA7CB55F2CCADB77003A3525 /* Ranchers-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */; };
 		CA7CB5602CCADB78003A3525 /* Ranchers-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */; };
@@ -63,6 +70,8 @@
 		CA2ACB452CC97C8300C97111 /* Impact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Impact.swift; sourceTree = "<group>"; };
 		CA2ACB472CC97CA500C97111 /* Level.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
 		CA47ED4B2CC9C4C90062578B /* Awards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Awards.swift; sourceTree = "<group>"; };
+		CA587BC22DB45FEA00CF7715 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		CA587BCE2DB462CC00CF7715 /* UserAuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAuthViewModel.swift; sourceTree = "<group>"; };
 		CA67E2492CCAB57B00ACFB78 /* Ranchers-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ranchers-Regular.ttf"; sourceTree = "<group>"; };
 		CA7CB5612CCADC65003A3525 /* Comfortaa-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Comfortaa-Medium.ttf"; sourceTree = "<group>"; };
 		CA7CB5652CCADEC6003A3525 /* Fredoka-VariableFont_wdth,wght.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fredoka-VariableFont_wdth,wght.ttf"; sourceTree = "<group>"; };
@@ -75,7 +84,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2ED12FC52DB3377C001A2E37 /* ConfettiSwiftUI in Frameworks */,
+				CA587BC82DB4611D00CF7715 /* FirebaseAnalytics in Frameworks */,
+				CA587BD12DB4751D00CF7715 /* FirebaseFirestore in Frameworks */,
+				CA587BCC2DB4611D00CF7715 /* FirebaseCore in Frameworks */,
+				CA587BCA2DB4611D00CF7715 /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +143,7 @@
 				CA7CB5612CCADC65003A3525 /* Comfortaa-Medium.ttf */,
 				CA7CB5652CCADEC6003A3525 /* Fredoka-VariableFont_wdth,wght.ttf */,
 				CA2ACB402CC9656800C97111 /* Info.plist */,
+				CA587BCE2DB462CC00CF7715 /* UserAuthViewModel.swift */,
 				CA2ACB0F2CC6BF5C00C97111 /* EcoQuestApp.swift */,
 				CA2ACB112CC6BF5C00C97111 /* ContentView.swift */,
 				CA2ACB132CC6BF5E00C97111 /* Assets.xcassets */,
@@ -142,6 +155,7 @@
 				CA2ACB472CC97CA500C97111 /* Level.swift */,
 				CA47ED4B2CC9C4C90062578B /* Awards.swift */,
 				CA8E7D5A2CD43F39007E058E /* Community.swift */,
+				CA587BC22DB45FEA00CF7715 /* GoogleService-Info.plist */,
 			);
 			path = EcoQuest;
 			sourceTree = "<group>";
@@ -188,7 +202,10 @@
 			);
 			name = EcoQuest;
 			packageProductDependencies = (
-				2ED12FC42DB3377C001A2E37 /* ConfettiSwiftUI */,
+				CA587BC72DB4611D00CF7715 /* FirebaseAnalytics */,
+				CA587BC92DB4611D00CF7715 /* FirebaseAuth */,
+				CA587BCB2DB4611D00CF7715 /* FirebaseCore */,
+				CA587BD02DB4751D00CF7715 /* FirebaseFirestore */,
 			);
 			productName = EcoQuest;
 			productReference = CA2ACB0C2CC6BF5C00C97111 /* EcoQuest.app */;
@@ -263,7 +280,7 @@
 			);
 			mainGroup = CA2ACB032CC6BF5C00C97111;
 			packageReferences = (
-				2ED12FC32DB336A1001A2E37 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
+				CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			productRefGroup = CA2ACB0D2CC6BF5C00C97111 /* Products */;
 			projectDirPath = "";
@@ -287,6 +304,7 @@
 				CA67E24A2CCAB57C00ACFB78 /* Ranchers-Regular.ttf in Resources */,
 				CA7CB5662CCADEC6003A3525 /* Fredoka-VariableFont_wdth,wght.ttf in Resources */,
 				CAFD00FC2CD5481A0055BB7F /* Fredoka.ttf in Resources */,
+				CA587BC32DB45FEA00CF7715 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,6 +313,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CA7CB55F2CCADB77003A3525 /* Ranchers-Regular.ttf in Resources */,
+				CA587BC52DB45FEA00CF7715 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -303,6 +322,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CA7CB5602CCADB78003A3525 /* Ranchers-Regular.ttf in Resources */,
+				CA587BC42DB45FEA00CF7715 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -318,6 +338,7 @@
 				CA2ACB482CC97CA500C97111 /* Level.swift in Sources */,
 				CA8E7D5B2CD43F39007E058E /* Community.swift in Sources */,
 				CA2ACB442CC97C4600C97111 /* Camera.swift in Sources */,
+				CA587BCF2DB462CC00CF7715 /* UserAuthViewModel.swift in Sources */,
 				CA2ACB422CC97BF100C97111 /* Quests.swift in Sources */,
 				CA2ACB462CC97C8400C97111 /* Impact.swift in Sources */,
 				CA2ACB122CC6BF5C00C97111 /* ContentView.swift in Sources */,
@@ -485,7 +506,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"EcoQuest/Preview Content\"";
-				DEVELOPMENT_TEAM = YNKGXGK378;
+				DEVELOPMENT_TEAM = 8S86J4WV4Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EcoQuest/Info.plist;
@@ -502,6 +523,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				NEW_SETTING = "";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.appchallenge.EcoQuest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -524,7 +546,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"EcoQuest/Preview Content\"";
-				DEVELOPMENT_TEAM = YNKGXGK378;
+				DEVELOPMENT_TEAM = 8S86J4WV4Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EcoQuest/Info.plist;
@@ -542,6 +564,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				NEW_SETTING = "";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.appchallenge.EcoQuest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -669,21 +692,36 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2ED12FC32DB336A1001A2E37 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */ = {
+		CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/simibac/ConfettiSwiftUI.git";
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.3;
+				minimumVersion = 11.11.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		2ED12FC42DB3377C001A2E37 /* ConfettiSwiftUI */ = {
+		CA587BC72DB4611D00CF7715 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2ED12FC32DB336A1001A2E37 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
-			productName = ConfettiSwiftUI;
+			package = CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		CA587BC92DB4611D00CF7715 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		CA587BCB2DB4611D00CF7715 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		CA587BD02DB4751D00CF7715 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

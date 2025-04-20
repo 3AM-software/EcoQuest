@@ -1,21 +1,73 @@
 import SwiftUI
+import Foundation
+import FirebaseFirestore
+
+class LeaderboardViewModel: ObservableObject {
+    @Published var entries: [LeaderboardEntry] = []
+
+    private var db = Firestore.firestore()
+
+    var dailySorted: [LeaderboardEntry] {
+        entries.sorted { $0.dailyPoints > $1.dailyPoints }
+    }
+
+    var allTimeSorted: [LeaderboardEntry] {
+        entries.sorted { $0.allTimePoints > $1.allTimePoints }
+    }
+
+    func fetchLeaderboard() async {
+        do {
+            print("Fetching leaderboard")
+            let snapshot = try await db.collection("leaderboard").getDocuments()
+
+            var updatedEntries: [LeaderboardEntry] = []
+
+            for document in snapshot.documents {
+                print("\(document.documentID) => \(document.data())")
+
+                if let newEntry = try? document.data(as: LeaderboardEntry.self) {
+                    updatedEntries.append(newEntry)
+                }
+            }
+
+            // Update entries on the main thread
+            DispatchQueue.main.async {
+                for newEntry in updatedEntries {
+                    if let index = self.entries.firstIndex(where: { $0.id == newEntry.id }) {
+                        self.entries[index] = newEntry
+                    } else {
+                        self.entries.append(newEntry)
+                    }
+                }
+
+                print(self.entries)
+            }
+
+        } catch {
+            print("Error getting documents: \(error)")
+        }
+    }
+
+
+}
 
 // Sample data model for a friend
 struct User: Identifiable {
     let id = UUID()
     let username: String
-    let color: Color
     let points: Int
 }
 
 // Sample data for friends (mockup data)
 struct Community: View {
     @ObservedObject var userViewModel: UserViewModel
+    @ObservedObject var authViewModel: UserAuthViewModel
     let isDarkMode: Bool
     let communityTab: String
     
-    init(userViewModel: UserViewModel, isDarkMode: Bool, communityTab: String) {
+    init(userViewModel: UserViewModel, authViewModel: UserAuthViewModel, isDarkMode: Bool, communityTab: String) {
         self.userViewModel = userViewModel
+        self.authViewModel = authViewModel
         self.isDarkMode = isDarkMode
         self.communityTab = communityTab
     }
@@ -28,7 +80,7 @@ struct Community: View {
                     .ignoresSafeArea()
                 
                 if communityTab == "Leaderboard" {
-                    LeaderboardView(userViewModel: userViewModel, isDarkMode: isDarkMode)
+                    LeaderboardView(userViewModel: userViewModel, authViewModel: authViewModel, isDarkMode: isDarkMode)
                         .padding(.top, -420)
                         .padding(.bottom, -32)
                 } else {
@@ -39,103 +91,146 @@ struct Community: View {
     }
 }
 
+
+struct LeaderboardEntry: Identifiable, Decodable {
+    @DocumentID var id: String?  // Automatically populated by Firestore
+    var displayName: String
+    var uid: String
+    var dailyPoints: Int
+    var allTimePoints: Int
+
+    // You may need to adjust the properties to match the Firestore fields
+}
+
 struct LeaderboardView: View {
     @ObservedObject var userViewModel: UserViewModel
+    @ObservedObject var authViewModel: UserAuthViewModel
     @State private var countdown: String = "24" // To hold the countdown string
     @State private var timer: Timer?
     let isDarkMode: Bool
     @State private var selectedTab: String = "Daily"
+    @StateObject var leaderboardVM = LeaderboardViewModel()
 
     let sampleFriends = [
-        User(username: "Joshua Luo", color: Color.blue, points: 1275),
-        User(username: "Michael Johnson", color: Color.yellow, points: 620),
-        User(username: "Liam O'Connor", color: Color.green, points: 785),
-        User(username: "Sofia Martinez", color: Color.purple, points: 350),
-        User(username: "Emily Chen", color: Color.orange, points: 430),
-        User(username: "Mia Thompson", color: Color.indigo, points: 1125),
-        User(username: "David Smith", color: Color.gray, points: 890),
-        User(username: "Ava Patel", color: Color.pink, points: 220),
-        User(username: "Brayden Watt", color: Color.teal, points: 190),
-        User(username: "Enpeng Jiang", color: Color.red, points: 50)
+        User(username: "Joshua Luo", points: 1275),
+        User(username: "Michael Johnson", points: 620),
+        User(username: "Liam O'Connor", points: 785),
+        User(username: "Sofia Martinez", points: 350),
+        User(username: "Emily Chen", points: 430),
+        User(username: "Mia Thompson", points: 1125),
+        User(username: "David Smith", points: 890),
+        User(username: "Ava Patel", points: 220),
+        User(username: "Brayden Watt", points: 190),
+        User(username: "Enpeng Jiang", points: 50)
     ]
+    
+    var leaderboardEntries: [LeaderboardEntry] {
+        selectedTab == "Daily" ? leaderboardVM.dailySorted : leaderboardVM.allTimeSorted
+    }
+    
+    var currentUserRank: Int? {
+        leaderboardEntries.firstIndex(where: { $0.uid == authViewModel.currentUserUid })?.advanced(by: 1)
+    }
 
+    func getRankColor(for rank: Int?) -> Color {
+        guard let rank = rank else { return .black }  // Default color for invalid rank or no rank
+        switch rank {
+        case 1:
+            return .yellow  // Yellow for rank 1
+        case 2:
+            return .gray  // Silver-ish color for rank 2
+        case 3:
+            return .brown  // Brown for rank 3
+        default:
+            return .black  // Gray for all other ranks
+        }
+    }
+    
     var body: some View {
         ScrollView {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 22/255, green: 162/255, blue: 74/255),
-                        Color(red: 17/255, green: 185/255, blue: 129/255)
-                    ]),
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(height: 550)
+                Color(red:123/255, green:182/255, blue:92/255)
+                .frame(height: 500)
                 VStack(alignment: .center, spacing: 16) {
                     Text("Leaderboard")
                         .font(.custom("Fredoka", size: 24))
                         .fontWeight(.semibold)
                     HStack(spacing: 12) {
                         ZStack {
+                            
+                            Rectangle()
+                                .cornerRadius(32)
+                                .foregroundColor(selectedTab == "Daily" ? .white : .clear)
                             Text("Daily")
                                 .font(.custom("Fredoka", size: 18))
                                 .fontWeight(selectedTab == "Daily" ? .medium : .medium)
-                                .foregroundColor(selectedTab == "Daily" ? .white : .white)
-                            Rectangle()
-                                .cornerRadius(16)
-                                .foregroundColor(selectedTab == "Daily" ? Color.white.opacity(0.2) : .clear)
+                                .foregroundColor(selectedTab == "Daily" ? Color(red:123/255, green:182/255, blue:92/255) : .white)
                         }
-                        .frame(height: 40)
+                        .frame(height: 32)
                         .onTapGesture {
                             withAnimation {
                                 selectedTab = "Daily"
+                                Task {
+                                    await leaderboardVM.fetchLeaderboard()
+                                }
                             }
                         }
                         ZStack {
+                           
+                            Rectangle()
+                                .cornerRadius(32)
+                                .foregroundColor(selectedTab == "All Time" ? .white : .clear)
                             Text("All Time")
                                 .font(.custom("Fredoka", size: 18))
                                 .fontWeight(selectedTab == "All Time" ? .medium : .medium)
-                                .foregroundColor(selectedTab == "All Time" ? .white : .white)
-                            Rectangle()
-                                .cornerRadius(16)
-                                .foregroundColor(selectedTab == "All Time" ? Color.white.opacity(0.2) : .clear)
+                                .foregroundColor(selectedTab == "All Time" ? Color(red:123/255, green:182/255, blue:92/255) : .white)
                         }
-                        .frame(height: 40)
+                        .frame(height: 32)
                         .onTapGesture {
                             withAnimation {
                                 selectedTab = "All Time"
+                                Task {
+                                    await leaderboardVM.fetchLeaderboard()
+                                }
                             }
                         }
                     }
                     .padding(.vertical, 4)
                     .padding(.horizontal, 4)
                     .background(Color.black.opacity(0.2))
-                    .cornerRadius(20)
+                    .cornerRadius(32)
                 }
-                .padding(.top, 380)
+                .padding(.top, 420)
+                .padding(.bottom, 24)
                 .padding([.leading, .trailing])
-                .padding(.bottom, -32)
             }
             .foregroundColor(.white)
                 if selectedTab == "Daily" {
                     VStack {
-                        HStack(spacing: 16) {
+                        HStack(spacing: 0) {
                             Spacer()
-                            VStack (spacing: 8) {
-                                Text("Resets In")
-                                    .font(.custom("Fredoka", size: 18))
-                                    .fontWeight(.medium)
-                                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
-                                HStack {
+                            HStack (alignment: .center) {
                                     Image(systemName: "clock")
-                                        .font(.system(size: 18))
+                                        .font(.system(size: 24))
                                         .foregroundColor(.orange)
-                                    Text("\(countdown) hours")
-                                        .font(.custom("Fredoka", size: 18))
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.orange)
+                                    VStack (alignment: .leading) {
+                                        HStack (alignment: .bottom) {
+                                            Text("\(countdown)")
+                                                .font(.custom("Fredoka", size: 22))
+                                                .fontWeight(.heavy)
+                                                .foregroundColor(.orange)
+                                            Text("hours")
+                                                .font(.custom("Fredoka", size: 18))
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.orange)
+                                        }
+                                        Text("Resets In")
+                                            .font(.custom("Fredoka", size: 16))
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.gray)
+                                            .opacity(0.8)
+                                    }
                                 }
-                            }
                             .padding(.vertical, -4)
                             Spacer()
                             Divider()
@@ -143,21 +238,33 @@ struct LeaderboardView: View {
                                 .overlay(ThemeColors.Content.border(isDarkMode))
                                 .padding(.vertical, -16)
                             Spacer()
-                            VStack (spacing: 8) {
-                                Text("Your Rank")
-                                    .font(.custom("Fredoka", size: 18))
-                                    .fontWeight(.medium)
-                                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
-                                HStack {
+                            HStack (alignment: .center) {
                                     Image(systemName: "medal.star")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(.yellow)
-                                    Text("#1")
-                                        .font(.custom("Fredoka", size: 18))
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.yellow)
+                                        .font(.system(size: 26))
+                                        .foregroundColor(self.getRankColor(for: currentUserRank))
+                                    VStack (alignment: .leading) {
+                                        HStack (alignment: .bottom, spacing: 0) {
+                                            Text("#")
+                                                .font(.custom("Fredoka", size: 18))
+                                                .fontWeight(.medium)
+                                                .foregroundColor(self.getRankColor(for: currentUserRank))
+                                            
+                                            Text(currentUserRank != nil ? "\(currentUserRank!)" : "-")
+                                                .font(.custom("Fredoka", size: 24))
+                                                .fontWeight(.heavy)
+                                                .foregroundColor(self.getRankColor(for: currentUserRank))
+                                        }
+
+                                        // Helper function to return the color based on the rank
+                                        
+
+                                        Text("Your Rank")
+                                            .font(.custom("Fredoka", size: 16))
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.gray)
+                                            .opacity(0.8)
+                                    }
                                 }
-                            }
                             .padding(.vertical, -4)
                             Spacer()
                         }
@@ -170,7 +277,8 @@ struct LeaderboardView: View {
                         
                     }
                     .padding(.horizontal)
-                    .padding(.vertical, 8)
+                    .padding(.top, -5)
+                    .padding(.bottom, 8)
                         
                     Rectangle()
                         .frame(height: 2)
@@ -178,28 +286,49 @@ struct LeaderboardView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom)
                     
-                    ForEach(sampleFriends.indices, id: \.self) { rank in
-                        let current = sampleFriends[rank]
-                        LeaderboardCard(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                    ForEach(leaderboardEntries.indices, id: \.self) { rank in
+                        let current = leaderboardEntries[rank]
+                        VStack (spacing: 0) {
+                            if rank != leaderboardEntries.indices.first {
+                                LeaderboardCard(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                                    .padding(.top, -16)
+                            } else {
+                                LeaderboardCard(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                            }
+                            if rank < leaderboardEntries.indices.last! { // Avoid line after the last card
+                                Rectangle()
+                                    .frame(height: 2)
+                                    .overlay(ThemeColors.Content.border(isDarkMode))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.top)
+                                    .padding(.bottom, -200)
+                                    
+                            }
+                        }
+                           
                     }
                     .padding(.bottom, 48)
                 } else {
                     VStack {
-                        HStack(spacing: 16) {
+                        HStack(spacing: 0) {
                             Spacer()
-                            VStack (spacing: 8) {
-                                Text("Resets In")
-                                    .font(.custom("Fredoka", size: 18))
-                                    .fontWeight(.medium)
-                                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
-                                HStack {
-                                    Image(systemName: "clock")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(.orange)
-                                    Text("Never!")
-                                        .font(.custom("Fredoka", size: 18))
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.orange)
+                            HStack (alignment: .center) {
+                                Image(systemName: "clock")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.orange)
+                                VStack (alignment: .leading) {
+                                    HStack (alignment: .bottom) {
+                                        Text("Never!")
+                                            .font(.custom("Fredoka", size: 22))
+                                            .fontWeight(.heavy)
+                                            .foregroundColor(.orange)
+                                        
+                                    }
+                                    Text("Resets In")
+                                        .font(.custom("Fredoka", size: 16))
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.gray)
+                                        .opacity(0.8)
                                 }
                             }
                             .padding(.vertical, -4)
@@ -209,19 +338,30 @@ struct LeaderboardView: View {
                                 .overlay(ThemeColors.Content.border(isDarkMode))
                                 .padding(.vertical, -16)
                             Spacer()
-                            VStack (spacing: 8) {
-                                Text("Your Rank")
-                                    .font(.custom("Fredoka", size: 18))
-                                    .fontWeight(.medium)
-                                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
-                                HStack {
-                                    Image(systemName: "medal.star")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(.yellow)
-                                    Text("#1")
-                                        .font(.custom("Fredoka", size: 18))
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.yellow)
+                            HStack (alignment: .center) {
+                                Image(systemName: "medal.star")
+                                    .font(.system(size: 26))
+                                    .foregroundColor(self.getRankColor(for: currentUserRank))
+                                VStack (alignment: .leading) {
+                                    HStack (alignment: .bottom, spacing: 0) {
+                                        Text("#")
+                                            .font(.custom("Fredoka", size: 18))
+                                            .fontWeight(.medium)
+                                            .foregroundColor(self.getRankColor(for: currentUserRank))
+                                        
+                                        Text(currentUserRank != nil ? "\(currentUserRank!)" : "-")
+                                            .font(.custom("Fredoka", size: 24))
+                                            .fontWeight(.heavy)
+                                            .foregroundColor(self.getRankColor(for: currentUserRank))
+                                    }
+
+                                    // Helper function to return the color based on the rank
+                                
+                                    Text("Your Rank")
+                                        .font(.custom("Fredoka", size: 16))
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.gray)
+                                        .opacity(0.8)
                                 }
                             }
                             .padding(.vertical, -4)
@@ -234,20 +374,37 @@ struct LeaderboardView: View {
                                 .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
                         )
                         
-                    
+                        
                     }
                     .padding(.horizontal)
-                    .padding(.vertical, 8)
+                    .padding(.top, -5)
+                    .padding(.bottom, 8)
                     
                     Rectangle()
                         .frame(height: 2)
                         .overlay(ThemeColors.Content.border(isDarkMode))
                         .frame(maxWidth: .infinity)
                         .padding(.bottom)
-                    
-                    ForEach(sampleFriends.indices, id: \.self) { rank in
-                        let current = sampleFriends[rank]
-                        LeaderboardCard(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                    ForEach(leaderboardEntries.indices, id: \.self) { rank in
+                        let current = leaderboardEntries[rank]
+                        VStack (spacing: 0) {
+                            if rank != leaderboardEntries.indices.first {
+                                LeaderboardCardAllTime(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                                    .padding(.top, -16)
+                            } else {
+                                LeaderboardCardAllTime(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                            }
+                            if rank < leaderboardEntries.indices.last! { // Avoid line after the last card
+                                Rectangle()
+                                    .frame(height: 2)
+                                    .overlay(ThemeColors.Content.border(isDarkMode))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.top)
+                                    .padding(.bottom, -200)
+                                    
+                            }
+                        }
+                           
                     }
                     .padding(.bottom, 48)
                 }
@@ -255,6 +412,11 @@ struct LeaderboardView: View {
         .onAppear {
             updateCountdown()
             startTimer()
+            
+            // Perform async operation in a Task
+            Task {
+                await leaderboardVM.fetchLeaderboard()
+            }
         }
     }
     
@@ -280,7 +442,7 @@ struct LeaderboardCard: View {
     @ObservedObject var userViewModel: UserViewModel
     let isDarkMode: Bool
     var rank: Int
-    var user: User
+    var user: LeaderboardEntry
 
     var body: some View {
         HStack(spacing: 12) {
@@ -310,21 +472,80 @@ struct LeaderboardCard: View {
 
             
             // Username
-            Text(user.username)
+            Text(user.displayName)
                 .font(.custom("Fredoka", size: 18))
-                .fontWeight(.medium)
+                .fontWeight(.semibold)
                 .foregroundColor(ThemeColors.Text.primary(isDarkMode))
             
             Spacer()
             
             // Level Text
-            Text("\(user.points)pts")
+            Text("\(user.dailyPoints) pts")
                 .font(.custom("Fredoka", size: 18))
                 .fontWeight(.regular)
-                .foregroundColor(.gray)
+                .foregroundColor(ThemeColors.Text.primary(isDarkMode))
         }
         .padding([.horizontal])
-        .padding(.vertical, -8)
+    }
+    
+    private var medalColor: Color {
+            switch rank {
+            case 1: return .yellow
+            case 2: return .gray
+            case 3: return .brown
+            default: return .clear
+            }
+        }
+}
+
+struct LeaderboardCardAllTime: View {
+    @ObservedObject var userViewModel: UserViewModel
+    let isDarkMode: Bool
+    var rank: Int
+    var user: LeaderboardEntry
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Rank
+            if rank <= 3 {
+                Image(systemName: "medal.fill")
+                    .font(.custom("Fredoka", size: 24))
+                    .fontWeight(.semibold)
+                    .foregroundColor(medalColor)
+            } else {
+                Text("\(rank)")
+                    .font(.custom("Fredoka", size: 20))
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeColors.Text.primary(isDarkMode))
+            }
+            
+            // Profile Image Circle
+            Circle()
+                .frame(width: 50, height: 50)
+                .foregroundColor(.gray)
+                .opacity(0.8)
+                .overlay(
+                    Image(systemName: "person.fill")
+                        .foregroundColor(.white)
+                        .font(.title2)
+                )
+
+            
+            // Username
+            Text(user.displayName)
+                .font(.custom("Fredoka", size: 18))
+                .fontWeight(.semibold)
+                .foregroundColor(ThemeColors.Text.primary(isDarkMode))
+            
+            Spacer()
+            
+            // Level Text
+            Text("\(user.allTimePoints) pts")
+                .font(.custom("Fredoka", size: 18))
+                .fontWeight(.regular)
+                .foregroundColor(ThemeColors.Text.primary(isDarkMode))
+        }
+        .padding([.horizontal])
     }
     
     private var medalColor: Color {

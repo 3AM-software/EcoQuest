@@ -6,14 +6,7 @@ struct HeaderTitleView: View {
     
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 22/255, green: 162/255, blue: 74/255),
-                    Color(red: 17/255, green: 185/255, blue: 129/255)
-                ]),
-                startPoint: .leading,
-                endPoint: .trailing
-            )
+            Color(red:123/255, green:182/255, blue:92/255)
             .frame(height: 100)
             HStack {
                 Text("EcoQuest")
@@ -41,15 +34,8 @@ struct ProfileInfoView: View {
         let level = Level(totalPoints: points) // Update to use the new Level initialization
         
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 22/255, green: 162/255, blue: 74/255),
-                    Color(red: 17/255, green: 185/255, blue: 129/255)
-                ]),
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            .frame(height: 550)
+            Color(red:123/255, green:182/255, blue:92/255)
+                .frame(height: 550)
             VStack(spacing: 16) {
                 VStack(spacing: 12) {
                     HStack {
@@ -145,23 +131,31 @@ struct StreakBadge: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: "flame.fill")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.orange)
-            Text("\(userViewModel.streak) Day Streak!")
-                .font(.custom("Fredoka", size: 18))
-                .fontWeight(.bold)
-                .foregroundColor(ThemeColors.Text.primary(isDarkMode))
+            ZStack {
+                
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 26, weight: .medium))
+                    .foregroundColor(.orange)
+                Image(systemName: "flame")
+                    .font(.system(size: 26, weight: .medium))
+                    .foregroundColor(.white)
+            }
+            HStack {
+                Text("\(userViewModel.streak)")
+                    .font(.custom("Fredoka", size: 28))
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                Text("Day Streak!")
+                    .font(.custom("Fredoka", size: 16))
+                    .fontWeight(.medium)
+            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 8)
-        .background(ThemeColors.Card.background(isDarkMode))
+        .background(Color.white.opacity(0.2))
         .cornerRadius(20)
         .shadow(color: isDarkMode ? .clear : .black.opacity(0.1), radius: 4)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 1)
-        )
-        .offset(y: -20)
+        
+        .offset(y: -15)
     }
 }
