@@ -2,9 +2,50 @@ import SwiftUI
 import Foundation
 import FirebaseFirestore
 
+struct Shimmer: ViewModifier {
+    @State private var phase: CGFloat = 0
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                GeometryReader { geometry in
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    .clear,
+                                    Color.white.opacity(0.4),
+                                    .clear
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .rotationEffect(.degrees(30))
+                        .offset(x: -geometry.size.width * 2 + phase, y: 0)
+                        .frame(width: geometry.size.width * 3, height: geometry.size.height)
+                }
+                .clipped()
+                .mask(content)
+            )
+            .onAppear {
+                withAnimation(Animation.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                    phase = 2 * UIScreen.main.bounds.width
+                }
+            }
+    }
+}
+
+extension View {
+    func shimmering() -> some View {
+        self.modifier(Shimmer())
+    }
+}
+
 class LeaderboardViewModel: ObservableObject {
     @Published var entries: [LeaderboardEntry] = []
-
+    @Published var isLoading: Bool = false
+    
     private var db = Firestore.firestore()
 
     var dailySorted: [LeaderboardEntry] {
@@ -16,6 +57,10 @@ class LeaderboardViewModel: ObservableObject {
     }
 
     func fetchLeaderboard() async {
+        await MainActor.run {
+            self.isLoading = true
+        }
+
         do {
             print("Fetching leaderboard")
             let snapshot = try await db.collection("leaderboard").getDocuments()
@@ -46,9 +91,54 @@ class LeaderboardViewModel: ObservableObject {
         } catch {
             print("Error getting documents: \(error)")
         }
+        await Task.sleep(3_000_000_000)
+        
+        await MainActor.run {
+                    self.isLoading = false
+                }
     }
+}
 
+struct LeaderboardCardSkeleton: View {
+    let isDarkMode: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Fake rank or medal
+            Circle()
+                .fill(ThemeColors2.Skeleton.base(isDarkMode))
+                .frame(width: 24, height: 24)
 
+            // Profile Image placeholder
+            Circle()
+                .fill(ThemeColors2.Skeleton.base(isDarkMode))
+                .frame(width: 50, height: 50)
+
+            // Username placeholder
+            RoundedRectangle(cornerRadius: 4)
+                .fill(ThemeColors2.Skeleton.base(isDarkMode))
+                .frame(width: 120, height: 18)
+
+            Spacer()
+
+            // Points placeholder
+            RoundedRectangle(cornerRadius: 4)
+                .fill(ThemeColors2.Skeleton.base(isDarkMode))
+                .frame(width: 60, height: 18)
+        }
+        .padding(.top, 0)
+        .padding([.horizontal])
+        .shimmering()
+    }
+        
+}
+
+enum ThemeColors2 {
+    enum Skeleton {
+        static func base(_ isDarkMode: Bool) -> Color {
+            isDarkMode ? Color.white.opacity(0.1) : Color.gray.opacity(0.3)
+        }
+    }
 }
 
 // Sample data model for a friend
@@ -110,7 +200,7 @@ struct LeaderboardView: View {
     let isDarkMode: Bool
     @State private var selectedTab: String = "Daily"
     @StateObject var leaderboardVM = LeaderboardViewModel()
-
+    
     let sampleFriends = [
         User(username: "Joshua Luo", points: 1275),
         User(username: "Michael Johnson", points: 620),
@@ -286,28 +376,52 @@ struct LeaderboardView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom)
                     
-                    ForEach(leaderboardEntries.indices, id: \.self) { rank in
-                        let current = leaderboardEntries[rank]
-                        VStack (spacing: 0) {
-                            if rank != leaderboardEntries.indices.first {
-                                LeaderboardCard(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
-                                    .padding(.top, -16)
-                            } else {
-                                LeaderboardCard(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
-                            }
-                            if rank < leaderboardEntries.indices.last! { // Avoid line after the last card
-                                Rectangle()
-                                    .frame(height: 2)
-                                    .overlay(ThemeColors.Content.border(isDarkMode))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.top)
-                                    .padding(.bottom, -200)
-                                    
+                    if leaderboardVM.isLoading {
+                        ForEach(0..<5, id: \.self) { index in
+                            VStack(spacing: 0) {
+
+                                if index != 0 {
+                                    LeaderboardCardSkeleton(isDarkMode: isDarkMode)
+                                        .padding(.top, -16)
+                                } else {
+                                    LeaderboardCardSkeleton(isDarkMode: isDarkMode)
+                                }
+
+                                // Separator line (not after last)
+                                if index < 4 {
+                                    Rectangle()
+                                        .frame(height: 2)
+                                        .overlay(ThemeColors.Content.border(isDarkMode))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.top, 20)
+                                        .padding(.bottom, -200)
+                                }
                             }
                         }
-                           
+                        .padding(.bottom, 48)
+
+                    } else {
+                        ForEach(leaderboardEntries.indices, id: \.self) { rank in
+                            let current = leaderboardEntries[rank]
+                            VStack (spacing: 0) {
+                                if rank != leaderboardEntries.indices.first {
+                                    LeaderboardCard(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                                        .padding(.top, -16)
+                                } else {
+                                    LeaderboardCard(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                                }
+                                if rank < leaderboardEntries.indices.last! {
+                                    Rectangle()
+                                        .frame(height: 2)
+                                        .overlay(ThemeColors.Content.border(isDarkMode))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.top)
+                                        .padding(.bottom, -200)
+                                }
+                            }
+                        }
+                        .padding(.bottom, 48)
                     }
-                    .padding(.bottom, 48)
                 } else {
                     VStack {
                         HStack(spacing: 0) {
@@ -385,28 +499,55 @@ struct LeaderboardView: View {
                         .overlay(ThemeColors.Content.border(isDarkMode))
                         .frame(maxWidth: .infinity)
                         .padding(.bottom)
-                    ForEach(leaderboardEntries.indices, id: \.self) { rank in
-                        let current = leaderboardEntries[rank]
-                        VStack (spacing: 0) {
-                            if rank != leaderboardEntries.indices.first {
-                                LeaderboardCardAllTime(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
-                                    .padding(.top, -16)
-                            } else {
-                                LeaderboardCardAllTime(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
-                            }
-                            if rank < leaderboardEntries.indices.last! { // Avoid line after the last card
-                                Rectangle()
-                                    .frame(height: 2)
-                                    .overlay(ThemeColors.Content.border(isDarkMode))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.top)
-                                    .padding(.bottom, -200)
-                                    
+                    
+                    if leaderboardVM.isLoading {
+                        ForEach(0..<5, id: \.self) { index in
+                            VStack(spacing: 0) {
+
+                                if index != 0 {
+                                    LeaderboardCardSkeleton(isDarkMode: isDarkMode)
+                                        .padding(.top, -16)
+                                } else {
+                                    LeaderboardCardSkeleton(isDarkMode: isDarkMode)
+                                }
+
+                                // Separator line (not after last)
+                                if index < 4 {
+                                    Rectangle()
+                                        .frame(height: 2)
+                                        .overlay(ThemeColors.Content.border(isDarkMode))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.top, 20)
+                                        .padding(.bottom, -200)
+                                }
                             }
                         }
-                           
+                        .padding(.bottom, 48)
+
+                    } else {
+                        ForEach(leaderboardEntries.indices, id: \.self) { rank in
+                            let current = leaderboardEntries[rank]
+                            VStack (spacing: 0) {
+                                if rank != leaderboardEntries.indices.first {
+                                    LeaderboardCardAllTime(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                                        .padding(.top, -16)
+                                } else {
+                                    LeaderboardCardAllTime(userViewModel: userViewModel, isDarkMode: isDarkMode, rank: rank + 1, user: current)
+                                }
+                                if rank < leaderboardEntries.indices.last! { // Avoid line after the last card
+                                    Rectangle()
+                                        .frame(height: 2)
+                                        .overlay(ThemeColors.Content.border(isDarkMode))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.top)
+                                        .padding(.bottom, -200)
+                                    
+                                }
+                            }
+                            
+                        }
+                        .padding(.bottom, 48)
                     }
-                    .padding(.bottom, 48)
                 }
         }
         .onAppear {
