@@ -2,12 +2,15 @@ import SwiftUI
 import UIKit
 
 struct HeaderTitleView: View {
+    let isDarkMode: Bool
     @State private var showSettings = false
     
     var body: some View {
         ZStack {
-            Color(red:123/255, green:182/255, blue:92/255)
-            .frame(height: 100)
+            Color(red: isDarkMode ? 85/255 : 123/255,
+                  green: isDarkMode ? 130/255 : 182/255,
+                  blue: isDarkMode ? 65/255 : 92/255)
+                .frame(height: 100)
             HStack {
                 Text("EcoQuest")
                     .font(.custom("Fredoka", size: 28))
@@ -26,6 +29,7 @@ struct HeaderTitleView: View {
 }
 
 struct ProfileInfoView: View {
+    let isDarkMode: Bool
     @ObservedObject var userViewModel: UserViewModel
     
     var body: some View {
@@ -34,7 +38,9 @@ struct ProfileInfoView: View {
         let level = Level(totalPoints: points) // Update to use the new Level initialization
         
         ZStack {
-            Color(red:123/255, green:182/255, blue:92/255)
+            Color(red: isDarkMode ? 85/255 : 123/255,
+                  green: isDarkMode ? 130/255 : 182/255,
+                  blue: isDarkMode ? 65/255 : 92/255)
                 .frame(height: 550)
             VStack(spacing: 16) {
                 VStack(spacing: 12) {

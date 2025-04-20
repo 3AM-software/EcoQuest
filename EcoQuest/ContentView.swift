@@ -577,6 +577,17 @@ struct DeveloperToolbarView: View {
                         }
                     )
                     
+                    DevMenuButton(
+                        title: "Who Really Made This App?",
+                        icon: "questionmark.circle",
+                        color: Color.purple,
+                        buttonScale: $closeScale,
+                        action: {
+                            triggerHaptic(.light)
+                            showWhoReallyMadeIt()
+                        }
+                    )
+                    
                     // Close Button
                     DevMenuButton(
                         title: "Close Menu",
@@ -621,6 +632,23 @@ struct DeveloperToolbarView: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showDevMenu)
         .onAppear(perform: prepareHaptics)
     }
+    
+    func showWhoReallyMadeIt() {
+        let alert = UIAlertController(
+            title: "Who Really Made This App?",
+            message: "Brayden... and also Josh",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "Nice", style: .default))
+
+        // Find the topmost view controller
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(alert, animated: true)
+        }
+    }
+
     
     // Setup haptic engine
     func prepareHaptics() {
@@ -791,7 +819,9 @@ struct ContentView: View {
                 isLoading = false
             }
         }
-        .onTapGesture(count: 3) {
+        .onLongPressGesture(minimumDuration: 3) {
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
             userViewModel.showDevMenu.toggle()
         }
     }
@@ -909,7 +939,7 @@ struct MainApp: View {
             
             VStack(spacing: 0) {
                 
-                HeaderTitleView()
+                HeaderTitleView(isDarkMode: isDarkMode)
                 if selectedTab == "Impact"{
                     Text("Your Impact")
                         .font(.custom("Fredoka", size: 20))
@@ -919,7 +949,8 @@ struct MainApp: View {
                         .padding(.top, -4)
                         .frame(maxWidth: .infinity) // Makes the text occupy full width
                         .multilineTextAlignment(.center) // Center-align the text
-                        .background(Color(red:123/255, green:182/255, blue:92/255))
+                        .background(isDarkMode ? Color(red: 85/255, green: 130/255, blue: 65/255)
+                                    : Color(red: 123/255, green: 182/255, blue: 92/255))
                     Rectangle()
                         .frame(height: 2)
                         .foregroundColor(.black.opacity(0.1))
@@ -947,11 +978,13 @@ struct MainApp: View {
                         ScrollView {
                             ZStack {
                                 // Green background
-                                Color(red:123/255, green:182/255, blue:92/255)
+                                Color(red: isDarkMode ? 85/255 : 123/255,
+                                      green: isDarkMode ? 130/255 : 182/255,
+                                      blue: isDarkMode ? 65/255 : 92/255)
 
                                 VStack(spacing: 0) {
                                     // Top section (green background)
-                                    ProfileInfoView(userViewModel: userViewModel)
+                                    ProfileInfoView(isDarkMode: isDarkMode, userViewModel: userViewModel)
                                         .edgesIgnoringSafeArea(.top)
                                         .padding(.top, -370)
                                         .transition(.opacity)
@@ -982,7 +1015,12 @@ struct MainApp: View {
                                             .transition(.opacity)
                                             .padding(.bottom, 10)
                                     }
-                                    .background(Color(red: 227/255, green: 179/255, blue:113/255))
+                                    .background(
+                                        isDarkMode
+                                            ? Color(red: 175/255, green: 130/255, blue: 80/255)
+                                            : Color(red: 227/255, green: 179/255, blue: 113/255)
+                                    )
+
                                     .clipShape(RoundedCorner(radius: 24, corners: [.topLeft, .topRight]))
                                     .transition(.opacity)
                                 }
@@ -1160,11 +1198,11 @@ struct MainApp: View {
                 ZStack {
                     if selectedTab == icon {
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.white.opacity(0.15))
+                            .fill(.cyan.opacity(0.3))
                             .frame(width: 52, height: 52)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .stroke(.white, lineWidth: 2)
+                                    .stroke(.cyan , lineWidth: 2.5)
                             )
                     }
                     
@@ -1267,15 +1305,20 @@ struct MainApp: View {
     func getNavBarBackgroundColor(for selectedTab: String) -> Color {
         switch selectedTab {
         case "Impact":
-            return Color(red:123/255, green:182/255, blue:92/255)
+            return isDarkMode ? Color(red: 85/255, green: 130/255, blue: 65/255)
+            : Color(red: 123/255, green: 182/255, blue: 92/255)
         case "Awards":
             return Color(red:149/255, green:86/255, blue:14/255)
         case "Home":
-            return Color(red: 227/255, green: 179/255, blue:113/255)
+            return isDarkMode ?
+                    Color(red: 175/255, green: 130/255, blue: 80/255) // Darker version
+                    : Color(red: 227/255, green: 179/255, blue: 113/255) // Original
         case "Friends":
-            return Color(red:123/255, green:182/255, blue:92/255)
+            return isDarkMode ? Color(red: 85/255, green: 130/255, blue: 65/255)
+            : Color(red: 123/255, green: 182/255, blue: 92/255)
         default:
-            return Color(red:123/255, green:182/255, blue:92/255)
+            return isDarkMode ? Color(red: 85/255, green: 130/255, blue: 65/255)
+            : Color(red: 123/255, green: 182/255, blue: 92/255)
         }
     }
 }

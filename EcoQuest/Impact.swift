@@ -45,7 +45,7 @@ struct ImpactView: View {
                         startRadius: isDarkMode ? 50 : 100,
                         endRadius: isDarkMode ? 300 : 300
                     )
-                    .frame(height: 620)
+                    .frame(height: 610)
                     .ignoresSafeArea()
                     
                     ZStack(alignment: .center) {
@@ -372,7 +372,7 @@ struct AnimalCardView: View {
     let index: Int
     
     let animals = [
-        Animal(title: "Polar Bear", icon: "polar_bear", unlocked: true, blurb: "As CO2 emissions heat up the planet, polar bears are left stranded on shrinking ice, struggling to hunt their favorite meal: seals! If we don't cut emissions, these Arctic giants could be in big trouble as their icy homes melt away."),
+        Animal(title: "Polar Bear", icon: "polar_bear", unlocked: false, blurb: "As CO2 emissions heat up the planet, polar bears are left stranded on shrinking ice, struggling to hunt their favorite meal: seals! If we don't cut emissions, these Arctic giants could be in big trouble as their icy homes melt away."),
         Animal(title: "American Pika", icon: "pika", unlocked: false, blurb: "These tiny, mountain-dwelling mammals are super sensitive to temperature changes, and fossil fuel pollution is making their high-altitude homes dangerously warm. As coal and other dirty energy sources heat up their cool mountain habitats, pikas are running out of places to hide from the heat!"),
         Animal(title: "Elephant", icon: "elephant", unlocked: false, blurb: "Elephants munch through tons of plants, keeping ecosystems balanced, but piles of waste and habitat loss make it harder for them to thrive. Reducing waste helps protect the land they need to roam free and healthy!"),
         Animal(title: "Sea Turtle", icon: "turtle", unlocked: false, blurb: "Sea turtles are mistaking plastic bottles for jellyfish, their favorite snack, and it's not doing them any favors. By cutting down on single-use plastics, we can help these ocean wanderers dodge a serious health hazard.")

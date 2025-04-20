@@ -239,7 +239,8 @@ struct LeaderboardView: View {
     var body: some View {
         ScrollView {
             ZStack {
-                Color(red:123/255, green:182/255, blue:92/255)
+                (isDarkMode ? Color(red: 85/255, green: 130/255, blue: 65/255)
+                            : Color(red: 123/255, green: 182/255, blue: 92/255))
                 .frame(height: 500)
                 VStack(alignment: .center, spacing: 16) {
                     Text("Leaderboard")
@@ -305,7 +306,7 @@ struct LeaderboardView: View {
                                         .foregroundColor(.orange)
                                     VStack (alignment: .leading) {
                                         HStack (alignment: .bottom) {
-                                            Text("\(countdown)")
+                                            Text("\(Int(countdown) ?? 0)")
                                                 .font(.custom("Fredoka", size: 22))
                                                 .fontWeight(.heavy)
                                                 .foregroundColor(.orange)
