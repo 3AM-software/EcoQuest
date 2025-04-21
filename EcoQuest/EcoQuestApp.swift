@@ -96,7 +96,7 @@ struct EcoQuestApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     @AppStorage("isDarkMode") private var isDarkMode = false
-    
+    @StateObject private var appWideState = AppWideState()
    
     
     var body: some Scene {
@@ -104,6 +104,7 @@ struct EcoQuestApp: App {
             
             ContentView()
                 .preferredColorScheme(.dark)
+                .environmentObject(appWideState)
         }
     }
 }

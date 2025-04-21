@@ -524,12 +524,16 @@ struct DeveloperToolbarView: View {
     @Binding var showDevMenu: Bool
     @StateObject private var authViewModel = UserAuthViewModel()
     @StateObject private var userViewModel = UserViewModel()
+    @EnvironmentObject private var appWideState: AppWideState
     @State private var engine: CHHapticEngine?
     
     // Animation states for buttons
     @State private var logoutScale: CGFloat = 1
     @State private var resetScale: CGFloat = 1
     @State private var closeScale: CGFloat = 1
+    @State private var commitHistoryScale: CGFloat = 1
+    @State private var flipAppScale: CGFloat = 1
+    @State private var fakeCrashScale: CGFloat = 1
     
     var body: some View {
         VStack(alignment: .trailing) {
@@ -577,14 +581,62 @@ struct DeveloperToolbarView: View {
                         }
                     )
                     
+                    // Add these buttons to the VStack in the body
+                    // Real Commit History Button
                     DevMenuButton(
-                        title: "Who Really Made This App?",
-                        icon: "questionmark.circle",
-                        color: Color.purple,
-                        buttonScale: $closeScale,
+                        title: "Real Commit History",
+                        icon: "chart.bar.doc.horizontal",
+                        color: Color.green,
+                        buttonScale: $commitHistoryScale,
                         action: {
-                            triggerHaptic(.light)
-                            showWhoReallyMadeIt()
+                            triggerHaptic(.medium)
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                commitHistoryScale = 0.95
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    commitHistoryScale = 1
+                                }
+                                showRealCommitHistory()
+                            }
+                        }
+                    )
+                    
+                    DevMenuButton(
+                        title: "Flip The App",
+                        icon: "arrow.2.squarepath",
+                        color: Color.purple,
+                        buttonScale: $flipAppScale,
+                        action: {
+                            triggerHaptic(.heavy)
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                flipAppScale = 0.95
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    flipAppScale = 1
+                                }
+                                activateAppFlip()
+                            }
+                        }
+                    )
+                    
+                    DevMenuButton(
+                        title: "Fake App Crash",
+                        icon: "exclamationmark.triangle.fill",
+                        color: Color.orange,
+                        buttonScale: $fakeCrashScale,
+                        action: {
+                            triggerHaptic(.heavy)
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                fakeCrashScale = 0.95
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    fakeCrashScale = 1
+                                }
+                                activateFakeCrash()
+                            }
                         }
                     )
                     
@@ -633,22 +685,162 @@ struct DeveloperToolbarView: View {
         .onAppear(perform: prepareHaptics)
     }
     
-    func showWhoReallyMadeIt() {
+    func showRealCommitHistory() {
         let alert = UIAlertController(
-            title: "Who Really Made This App?",
-            message: "Brayden... and also Josh",
+            title: "Real Commit History",
+            message: "Commits by Josh: 10 (20%)\nCommits by Brayden: 39 (80%)\n\nLines of Code:\nJosh: 1065\nBrayden: 9606",
             preferredStyle: .alert
         )
-
-        alert.addAction(UIAlertAction(title: "Nice", style: .default))
-
+        
+        alert.addAction(UIAlertAction(title: "I Knew It!", style: .default))
+        alert.addAction(UIAlertAction(title: "Share Truth", style: .destructive))
+        
         // Find the topmost view controller
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let root = scene.windows.first?.rootViewController {
             root.present(alert, animated: true)
         }
     }
-
+    
+    func activateAppFlip() {
+        // Close the dev menu
+        withAnimation(.easeOut(duration: 0.2)) {
+            showDevMenu = false
+        }
+        
+        // Wait a bit then flip the app
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                appWideState.isAppUpsideDown = true
+            }
+            
+            // Add some bouncing emojis for fun
+            createBouncingEmojis(count: 15)
+            
+            // Auto reset after 8 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                    appWideState.isAppUpsideDown = false
+                    appWideState.bouncingObjects = []
+                }
+            }
+        }
+    }
+    
+    func activateFakeCrash() {
+        // Close the dev menu
+        withAnimation(.easeOut(duration: 0.2)) {
+            showDevMenu = false
+        }
+        
+        // Trigger the fake crash sequence
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // Play system error sound if available
+            AudioServicesPlaySystemSound(1107) // System error sound
+            
+            // Show the crash screen
+            withAnimation(.easeInOut(duration: 0.2)) {
+                appWideState.isShowingFakeCrash = true
+            }
+            
+            // Auto reset after 5 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    appWideState.isShowingFakeCrash = false
+                }
+            }
+        }
+    }
+    
+    func createBouncingEmojis(count: Int) {
+        // Create bouncing emojis
+        let emojis = ["🥀","💔"]
+        var newBouncingObjects: [BouncingObject] = []
+        
+        for _ in 0..<count {
+            let randomEmoji = emojis.randomElement() ?? "⭐️"
+            let randomPosition = CGPoint(
+                x: CGFloat.random(in: 50...UIScreen.main.bounds.width-50),
+                y: CGFloat.random(in: 50...UIScreen.main.bounds.height-50)
+            )
+            let randomVelocity = CGPoint(
+                x: CGFloat.random(in: -5...5),
+                y: CGFloat.random(in: -5...5)
+            )
+            let randomSize = CGFloat.random(in: 30...60)
+            
+            newBouncingObjects.append(BouncingObject(
+                emoji: randomEmoji,
+                position: randomPosition,
+                velocity: randomVelocity,
+                size: randomSize
+            ))
+        }
+        
+        appWideState.bouncingObjects = newBouncingObjects
+        
+        // Start animation timer
+        startBouncingAnimation()
+    }
+    
+    func startBouncingAnimation() {
+        // Create a timer that updates the positions
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
+            var updated = self.appWideState.bouncingObjects
+            for i in 0..<updated.count {
+                var object = updated[i]
+                
+                // Update position based on velocity
+                object.position.x += object.velocity.x
+                object.position.y += object.velocity.y
+                
+                // Bounce off edges
+                let screenWidth = UIScreen.main.bounds.width
+                let screenHeight = UIScreen.main.bounds.height
+                
+                if object.position.x < 0 || object.position.x > screenWidth {
+                    object.velocity.x *= -1
+                }
+                
+                if object.position.y < 0 || object.position.y > screenHeight {
+                    object.velocity.y *= -1
+                }
+                
+                // Apply gravity
+                object.velocity.y += 0.2
+                
+                // Update the object
+                updated[i] = object
+            }
+            
+            // Update the state
+            DispatchQueue.main.async {
+                self.appWideState.bouncingObjects = updated
+            }
+        }
+        
+        // Stop the timer when the easter egg is no longer active
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30.1) {
+            timer.invalidate()
+        }
+    }
+    
+    func showWhoReallyMadeIt() {
+        let alert = UIAlertController(
+            title: "Who Really Made This App?",
+            message: "Brayden... and also Josh",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Nice", style: .default))
+        
+        // Find the topmost view controller
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(alert, animated: true)
+        }
+    }
+    
     
     // Setup haptic engine
     func prepareHaptics() {
@@ -717,6 +909,74 @@ struct DeveloperToolbarView: View {
     }
 }
 
+struct BouncingObject: Identifiable {
+    var id = UUID()
+    let emoji: String
+    var position: CGPoint
+    var velocity: CGPoint
+    let size: CGFloat
+}
+
+struct BouncingEmoji: View {
+    let emoji: String
+    var position: CGPoint
+    var velocity: CGPoint
+    let size: CGFloat
+    
+    var body: some View {
+        Text(emoji)
+            .font(.system(size: size))
+            .position(position)
+    }
+}
+
+// Create a Fake Crash Screen View
+struct FakeCrashView: View {
+    var isVisible: Bool
+    
+    var body: some View {
+        ZStack {
+            Color.black
+            
+            VStack(spacing: 20) {
+                Image(systemName: "xmark.octagon.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 80)
+                    .foregroundColor(.red)
+                
+                Text("App Crashed")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Text("Fatal Error: UILocalizedIndexedException\nExceptionReason=NSRangeException: Range{length=21} beyond bounds [0...5]")
+                    .font(.system(size: 16, weight: .medium))
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.gray)
+                
+                Text("Function: -[Quests sendImageToOpenAI]")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.gray)
+                
+                Text("EcoQuest has crashed.\nPlease restart the app.")
+                    .padding(.top, 40)
+                    .font(.system(size: 18))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                
+                Text("(This is just a joke. App is fine!)")
+                    .font(.system(size: 12))
+                    .foregroundColor(.gray.opacity(0.1))
+                    .padding(.top, 100)
+            }
+            .padding(40)
+        }
+        .opacity(isVisible ? 1 : 0)
+        .animation(.easeInOut(duration: 0.3), value: isVisible)
+        .edgesIgnoringSafeArea(.all)
+    }
+}
+
 // Reusable button component for the dev menu
 struct DevMenuButton: View {
     let title: String
@@ -767,9 +1027,14 @@ struct DevMenuButton: View {
     }
 }
 
-
+class AppWideState: ObservableObject {
+    @Published var isAppUpsideDown = false
+    @Published var isShowingFakeCrash = false
+    @Published var bouncingObjects: [BouncingObject] = []
+}
 
 struct ContentView: View {
+    @StateObject private var appWideState = AppWideState()
     @State private var isLoading = true
     @StateObject private var authViewModel = UserAuthViewModel()
     @StateObject private var userViewModel = UserViewModel()
@@ -787,12 +1052,35 @@ struct ContentView: View {
                 if authViewModel.isLoggedIn {
                     ZStack {
                         if showMainApp {
-                            MainApp()
-                                .transition(.move(edge: .trailing)) // This animates the main app entering from the right
+                            ZStack {
+                                MainApp()
+                                    .transition(.move(edge: .trailing))
+                                    .environmentObject(appWideState)
+                                    .rotation3DEffect(
+                                        appWideState.isAppUpsideDown ? Angle(degrees: 180) : Angle(degrees: 0),
+                                        axis: (x: 1.0, y: 0.0, z: 0.0)
+                                    )
+                                if !appWideState.bouncingObjects.isEmpty {
+                                    ZStack {
+                                        ForEach(appWideState.bouncingObjects.indices, id: \.self) { index in
+                                            BouncingEmoji(
+                                                emoji: appWideState.bouncingObjects[index].emoji,
+                                                position: appWideState.bouncingObjects[index].position,
+                                                velocity: appWideState.bouncingObjects[index].velocity,
+                                                size: appWideState.bouncingObjects[index].size
+                                            )
+                                        }
+                                    }
+                                }
+                                FakeCrashView(isVisible: appWideState.isShowingFakeCrash)
+                                                .edgesIgnoringSafeArea(.all)
+                                                .zIndex(100)
+                            }
                         }
                         
                         if userViewModel.showDevMenu {
                             DeveloperToolbarView(showDevMenu: $userViewModel.showDevMenu)
+                                .environmentObject(appWideState)
                         }
                     }
                     .onAppear {
