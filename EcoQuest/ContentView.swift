@@ -46,6 +46,7 @@
     }
 
     class UserViewModel: ObservableObject {
+        @ObservedObject var globalState = GlobalState.shared // Keep this
         private let db = Firestore.firestore()
         
         private var uid: String? {
@@ -256,13 +257,14 @@
             }
             numQuests += 1
             dateOfNumQuests = Date()
+            /*
             if !firstAwardUnlocked && totalpoints >= 1 {
                 firstAwardUnlocked = true
                 withAnimation {
                     showAwardPopupWithDelay()
                 }
                 awardNum = 0
-            }
+            }*/
             
             updateLeaderboardInFirestore()
         }
@@ -298,30 +300,38 @@
         }
 
         func addActions(_ action: String) {
-            // Your existing code to increment actions
-            if action == "reusableBottle" {
-                bottleActions += 1
-                bottles += 2
-            } else if action == "recyclableItem" {
-                recycleActions += 1
-                waste += 0.15
-            } else if action == "publicTransport" {
-                transportAction += 1
-                co2 += 9
-                trips += 1
-            } else if action == "plantTree" {
-                treeAction += 1
-                co2 += 1
-                trees += 1
-            } else if action == "switchLight" {
-                lightAction += 1
-                energy += 1
+          let previousTotal = totalActions
+
+          switch action {
+          case "reusableBottle":
+            bottleActions += 1; bottles += 2
+          case "recyclableItem":
+            recycleActions += 1; waste += 0.15
+          case "publicTransport":
+            transportAction += 1; co2 += 9; trips += 1
+          case "plantTree":
+            treeAction += 1; co2 += 1; trees += 1
+          case "switchLight":
+            lightAction += 1; energy += 1
+          default:
+            break
+          }
+
+          checkAndUpdateStreak()
+          lastActionDate = Date()
+
+          if previousTotal == 0,
+             totalActions >= 1,
+             !firstAwardUnlocked
+          {
+            firstAwardUnlocked = true
+            awardNum = 0
+            withAnimation {
+              showAwardPopupWithDelay()
             }
-            
-            checkAndUpdateStreak()
-            
-            lastActionDate = Date()
+          }
         }
+
         
         func resetActions() {
             bottleActions = 0
@@ -356,6 +366,14 @@
 
         func resetStreak() {
             streak = 0
+        }
+        
+        var totalActions: Int {
+          bottleActions
+          + recycleActions
+          + transportAction
+          + treeAction
+          + lightAction
         }
     }
 
@@ -1392,6 +1410,15 @@
                 
             }
             .confettiCannon(trigger: $globalState.counter)
+            .onReceive(globalState.$counter) { newCount in
+                  guard newCount >= 1, !userViewModel.firstAwardUnlocked else { return }
+                  // mark the award unlocked:
+                  userViewModel.firstAwardUnlocked = true
+                  userViewModel.awardNum = 0
+                  withAnimation {
+                    userViewModel.showAwardPopupWithDelay()
+                  }
+                }
         }
         
         private func startTimer() {

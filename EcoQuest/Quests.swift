@@ -217,7 +217,7 @@ struct NewQuestView: View {
             NewQuest(title: "Recycle items", currActions: userViewModel.recycleActions, maxActions: 5, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image contain a recyclable item? Please answer using just 'yes' or 'no'.", actionPrompt: "recyclableItem"),
             NewQuest(title: "Take public transport", currActions: userViewModel.transportAction, maxActions: 1, icon: "bus", iconColor: .green, completionPrompt: "Does the image contain a form of public transport? Please answer using just 'yes' or 'no'.", actionPrompt: "publicTransport"),
             NewQuest(title: "Plant a tree", currActions: userViewModel.treeAction, maxActions: 1, icon: "tree", iconColor: .brown, completionPrompt: "Does the image contain a newly planted tree? Please answer using just 'yes' or 'no'.", actionPrompt: "plantTree"),
-            NewQuest(title: "Switch off unused lights", currActions: userViewModel.lightAction, maxActions: 4, icon: "lightbulb", iconColor: .yellow, completionPrompt: "Does the image show a light that is turned off? Please answer using just 'yes' or 'no'.", actionPrompt: "switchLight")
+            NewQuest(title: "Switch off unused lights", currActions: userViewModel.lightAction, maxActions: 4, icon: "lightbulb", iconColor: .yellow, completionPrompt: "Does the image show a set of lights that are turned off? Please answer using just 'yes' or 'no'.", actionPrompt: "switchLight")
         ])
         self.userViewModel = userViewModel
     }
