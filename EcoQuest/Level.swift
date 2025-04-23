@@ -38,9 +38,7 @@ struct ProfileInfoView: View {
         let level = Level(totalPoints: points) // Update to use the new Level initialization
         
         ZStack {
-            Color(red: isDarkMode ? 85/255 : 123/255,
-                  green: isDarkMode ? 130/255 : 182/255,
-                  blue: isDarkMode ? 65/255 : 92/255)
+            Color.clear
                 .frame(height: 550)
             VStack(spacing: 16) {
                 VStack(spacing: 12) {

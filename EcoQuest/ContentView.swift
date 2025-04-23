@@ -584,7 +584,6 @@
                                     }
                                     userViewModel.resetActions()
                                     userViewModel.resetPoints()
-                                    appWideState.shouldRefreshMainApp = true
 
                                 }
                             }
@@ -1166,8 +1165,9 @@
 
     struct MainApp: View {
         @ObservedObject var globalState = GlobalState.shared // Keep this
+        @EnvironmentObject var appWideState: AppWideState
         @State private var showSettings = false
-        @State private var selectedTab: String = "Home"
+        @SceneStorage("selectedTab") private var selectedTab: String = "Home"
         @AppStorage("isDarkMode") private var isDarkMode = false
         @State private var selectedDetent: PresentationDetent = .height(700)
         @StateObject private var userViewModel = UserViewModel()
@@ -1224,62 +1224,94 @@
                                 }
                                 .transition(.opacity)
                             }
+                            .refreshable {
+                              // 1) haptic
+                              UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                              // 2) trigger your remount
+                                try? await Task.sleep(nanoseconds: 500_000_000)
+
+                              appWideState.shouldRefreshMainApp.toggle()
+                              // 3) optional small delay so the spinner shows
+                            }
                         }
                         else if selectedTab == "Home" {
-                            ScrollView {
-                                ZStack {
-                                    // Green background
-                                    Color(red: isDarkMode ? 85/255 : 123/255,
-                                          green: isDarkMode ? 130/255 : 182/255,
-                                          blue: isDarkMode ? 65/255 : 92/255)
-
-                                    VStack(spacing: 0) {
-                                        // Top section (green background)
-                                        ProfileInfoView(isDarkMode: isDarkMode, userViewModel: userViewModel)
-                                            .edgesIgnoringSafeArea(.top)
-                                            .padding(.top, -370)
-                                            .transition(.opacity)
-
-                                        StreakBadge(isDarkMode: isDarkMode, userViewModel: userViewModel)
-                                            .transition(.opacity)
-
-                                        // Bottom section (brown background)
-                                        VStack(spacing: 0) {
-                                            HStack {
-                                                Text("Daily Quests")
-                                                    .font(.custom("Fredoka", size: 24))
-                                                    .fontWeight(.semibold)
-                                                    .foregroundColor(.white)
-                                                Spacer()
-                                                Image(systemName: "clock")
-                                                    .font(.system(size: 16, weight: .bold))
-                                                    .foregroundColor(.white)
-                                                Text(countdown)
-                                                    .font(.custom("Fredoka", size: 16))
-                                                    .monospacedDigit()
-                                                    .foregroundColor(.white)
-                                                    .fontWeight(.medium)
-                                                    .frame(width: 80, alignment: .leading)
-                                            }
-                                            .padding(.horizontal, 24)
-                                            .padding(.vertical)
-
-                                            NewQuestView(isDarkMode: isDarkMode, userViewModel: userViewModel)
-                                                .transition(.opacity)
-                                                .padding(.bottom, 10)
-                                        }
-                                        .background(
-                                            isDarkMode
-                                                ? Color(red: 175/255, green: 130/255, blue: 80/255)
-                                                : Color(red: 227/255, green: 179/255, blue: 113/255)
-                                        )
-
-                                        .clipShape(RoundedCorner(radius: 24, corners: [.topLeft, .topRight]))
+                            ScrollView(showsIndicators: false) {
+                                VStack(spacing: 0) {
+                                    // Your header hack stays exactly as before:
+                                    ProfileInfoView(isDarkMode: isDarkMode, userViewModel: userViewModel)
+                                        .edgesIgnoringSafeArea(.top)
+                                        .padding(.top, -370)
                                         .transition(.opacity)
-                                    }
-                                }
 
+                                    StreakBadge(isDarkMode: isDarkMode, userViewModel: userViewModel)
+                                        .transition(.opacity)
+                                        .padding(.bottom, 8)
+
+                                    // Daily Quests
+                                    VStack(spacing: 0) {
+                                        HStack {
+                                            Text("Daily Quests")
+                                                .font(.custom("Fredoka", size: 24))
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.white)
+                                            Spacer()
+                                            Image(systemName: "clock")
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(.white)
+                                            Text(countdown)
+                                                .font(.custom("Fredoka", size: 16))
+                                                .monospacedDigit()
+                                                .fontWeight(.medium)
+                                                .foregroundColor(.white)
+                                                .frame(width: 80, alignment: .leading)
+                                        }
+                                        .padding(.horizontal, 24)
+                                        .padding(.vertical)
+
+                                        NewQuestView(isDarkMode: isDarkMode, userViewModel: userViewModel)
+                                            .transition(.opacity)
+                                            .padding(.bottom, 10)
+                                    }
+                                    .background(
+                                        isDarkMode
+                                            ? Color(red: 175/255, green: 130/255, blue:  80/255)
+                                            : Color(red: 227/255, green: 179/255, blue: 113/255)
+                                    )
+                                    .clipShape(RoundedCorner(radius: 24, corners: [.topLeft, .topRight]))
+                                    .transition(.opacity)
+                                }
                             }
+                            // Hide the default white under-scroll background (iOS 16+)
+                            .scrollContentBackground(.hidden)
+                            // Put your green behind the scroll content itself
+                            .background(
+                                // stack two colors vertically
+                                VStack(spacing: 0) {
+                                    // 1) top band — green
+                                    Color(
+                                        red:   isDarkMode ?  85/255 : 123/255,
+                                        green: isDarkMode ? 130/255 : 182/255,
+                                        blue:  isDarkMode ?  65/255 :  92/255
+                                    )
+                                    .frame(height: 500)          // adjust to match your header height
+
+                                    // 2) bottom — brown, filling the rest
+                                    Color(
+                                        red:   isDarkMode ? 175/255 : 227/255,
+                                        green: isDarkMode ? 130/255 : 179/255,
+                                        blue:  isDarkMode ?  80/255 : 113/255
+                                    )
+                                }
+                                .ignoresSafeArea()               // let both colors reach screen edges
+                            )
+                            .refreshable {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                try? await Task.sleep(nanoseconds: 500_000_000)
+                                appWideState.shouldRefreshMainApp.toggle()
+                            }
+                            .zIndex(1)
+                        
+
                         } else if selectedTab == "Awards" {
                             ScrollView {
                                 ZStack {
@@ -1318,11 +1350,28 @@
                                     }
                                 }
                             }
+                            .refreshable {
+                              // 1) haptic
+                              UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                try? await Task.sleep(nanoseconds: 500_000_000)
+
+                              appWideState.shouldRefreshMainApp.toggle()
+                            }
+                            
                         } else if selectedTab == "Friends" {
                             ScrollView {
                                 Community(userViewModel: userViewModel, authViewModel: authViewModel, isDarkMode: isDarkMode, communityTab: communityTab)
                                     .transition(.opacity)
                                     .padding(.bottom)
+                            }
+                            .refreshable {
+                              // 1) haptic
+                              UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                              // 2) trigger your remount
+                                try? await Task.sleep(nanoseconds: 500_000_000)
+
+                              appWideState.shouldRefreshMainApp.toggle()
+                              // 3) optional small delay so the spinner shows
                             }
                         } else if selectedTab == "Profile" {
                             ScrollView {
