@@ -15,104 +15,6 @@ func encodeJPEGImage(data: Data) -> String {
     return "data:image/jpeg;base64,\(base64String)"
 }
 
-
-func sendImageToOpenAI(base64Image: String, prompt: String) -> String {
-
-    let apiKey = "FRI"
-
-    let url = URL(string: "POST https://api.moondream.ai/v1/query")!
-    
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.addValue("your_api_key_here", forHTTPHeaderField: "X-Moondream-Auth")
-    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    
-    // Create the request body
-    // Prepare individual components to simplify the main dictionary construction
-    let modelKey = "model"
-    let modelValue = "gpt-4o-mini"
-
-    let roleKey = "role"
-    let roleValue = "user"
-
-    let contentKey = "content"
-    let temperatureKey = "temperature"
-    let temperatureValue: Double = 1
-    let maxTokensKey = "max_tokens"
-    let maxTokensValue = 4
-
-    // Constructing the content array
-    let textContent: [String: Any] = [
-        "type": "text",
-        "text": prompt // Use the prompt parameter
-    ]
-
-    let imageContent: [String: Any] = [
-        "type": "image_url",
-        "image_url": [
-            "url": "data:image/jpeg;base64,\(base64Image)"
-        ]
-    ]
-
-    let contentArray: [[String: Any]] = [textContent, imageContent]
-
-    // Constructing the messages array
-    let messages: [[String: Any]] = [
-        [
-            roleKey: roleValue,
-            contentKey: contentArray
-        ]
-    ]
-
-    // Constructing the final body dictionary
-    let body: [String: Any] = [
-        modelKey: modelValue,
-        "messages": messages,
-        temperatureKey: temperatureValue,
-        maxTokensKey: maxTokensValue
-    ]
-    
-    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-
-    // Create a semaphore to wait for the response
-    let semaphore = DispatchSemaphore(value: 0)
-    var result: String = "Failed to get a response" // Default value in case of failure
-    
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error = error {
-            print("Error: \(error.localizedDescription)")
-            semaphore.signal()
-            return
-        }
-        
-        guard let data = data else {
-            print("No data received.")
-            semaphore.signal()
-            return
-        }
-        print("here")
-        // Handle the response
-        if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-           let choices = json["choices"] as? [[String: Any]],
-           let message = choices.first?["message"] as? [String: Any],
-           let content = message["content"] as? String {
-            result = content // Store the response in the result variable
-        } else {
-            print("Failed to parse JSON.")
-        }
-        
-        semaphore.signal() // Signal that the request is complete
-    }
-    
-    task.resume()
-    
-    // Wait until the task signals that it's done
-    semaphore.wait()
-    return result // Return the result
-}
-
-
 func queryMoondream(base64Image: String, prompt: String) -> String {
     let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlfaWQiOiIzNzY5NjViMC0wYjU1LTQwNDUtOGNiNS00MzYyMDZjMmQyNmUiLCJvcmdfaWQiOiI5SHhQRzhoUnVlT0ROZUp3aXZJYjRPY3JLa2M2TjlQZiIsImlhdCI6MTc0NDk0OTI4MywidmVyIjoxfQ.UBzHSQOf66Ythpp0pV_1Gp-FLeRu2MBfUAiL_x6-fwQ"
     let url = URL(string: "https://api.moondream.ai/v1/query")!
@@ -214,10 +116,11 @@ struct NewQuestView: View {
         self.isDarkMode = isDarkMode
         _quests = State(initialValue: [
             NewQuest(title: "Use a reusable water bottle", currActions: userViewModel.bottleActions, maxActions: 1, icon: "drop", iconColor: .blue, completionPrompt: "Does the image contain a reusable water bottle? Please answer using just 'yes' or 'no'.", actionPrompt: "reusableBottle"),
-            NewQuest(title: "Recycle items", currActions: userViewModel.recycleActions, maxActions: 5, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image contain a recyclable item? Please answer using just 'yes' or 'no'.", actionPrompt: "recyclableItem"),
+            NewQuest(title: "Recycle items", currActions: userViewModel.recycleActions, maxActions: 5, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image show someone recycling? Look for recyclable items and a recycling bin. Please answer using just 'yes' or 'no'.", actionPrompt: "recyclableItem"),
             NewQuest(title: "Take public transport", currActions: userViewModel.transportAction, maxActions: 1, icon: "bus", iconColor: .green, completionPrompt: "Does the image contain a form of public transport? Please answer using just 'yes' or 'no'.", actionPrompt: "publicTransport"),
             NewQuest(title: "Plant a tree", currActions: userViewModel.treeAction, maxActions: 1, icon: "tree", iconColor: .brown, completionPrompt: "Does the image contain a newly planted tree? Please answer using just 'yes' or 'no'.", actionPrompt: "plantTree"),
-            NewQuest(title: "Switch off unused lights", currActions: userViewModel.lightAction, maxActions: 4, icon: "lightbulb", iconColor: .yellow, completionPrompt: "Does the image show a set of lights that are turned off? Please answer using just 'yes' or 'no'.", actionPrompt: "switchLight")
+            NewQuest(title: "Switch off unused lights", currActions: userViewModel.lightAction, maxActions: 4, icon: "lightbulb", iconColor: .yellow, completionPrompt: "Does the image show a set of lights that are turned off? Please answer using just 'yes' or 'no'.", actionPrompt: "switchLight"),
+            NewQuest(title: "Use  reusable shopping bag", currActions: userViewModel.bagAction, maxActions: 1, icon: "bag", iconColor: .red, completionPrompt: "Does the image contain a non-plastic, reusable shopping bag? Please answer using just 'yes' or 'no'.", actionPrompt: "useBag")
         ])
         self.userViewModel = userViewModel
     }

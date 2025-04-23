@@ -6,7 +6,8 @@ struct CameraView: View {
     @Binding var selectedImage: UIImage?
     @Environment(\.dismiss) private var dismiss
     @StateObject private var camera = CameraModel()
-
+    @State private var didCapture = false
+    
     var body: some View {
         Group {
             if camera.isSimulator {
@@ -63,6 +64,8 @@ struct CameraView: View {
                                 }
                                 Spacer()
                                 Button {
+                                    guard !didCapture else { return }      // ← prevent a second tap
+                                    didCapture = true                       // ← mark that we just took one
                                     camera.captureImage { image in
                                         selectedImage = image
                                         dismiss()
@@ -81,6 +84,8 @@ struct CameraView: View {
                                             .shadow(radius: 5)
                                     }
                                 }
+                                .disabled(didCapture)                       // ← disable UI after first shot
+                                .opacity(didCapture ? 0.5 : 1)
                                 .padding(.bottom, 10)
                                 .padding(.leading, -32)
                                 Spacer()

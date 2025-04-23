@@ -176,6 +176,12 @@
             }
         }
         
+        @Published var bagAction: Int {
+            didSet {
+                UserDefaults.standard.set(bagAction, forKey: "useBag")
+            }
+        }
+        
         @Published var numQuests: Int {
             didSet {
                 UserDefaults.standard.set(numQuests, forKey: "numQuests")
@@ -215,6 +221,7 @@
             self.transportAction = UserDefaults.standard.integer(forKey: "publicTransport")
             self.treeAction = UserDefaults.standard.integer(forKey: "plantTree")
             self.lightAction = UserDefaults.standard.integer(forKey: "switchLight")
+            self.bagAction = UserDefaults.standard.integer(forKey: "useBag")
             self.highestWeeklyQuests = UserDefaults.standard.integer(forKey: "hQuests")
             self.highestDailyPoints = UserDefaults.standard.integer(forKey: "hPoints")
             self.dateOfHighestDailyPoints = UserDefaults.standard.object(forKey: "dateOfHighestDailyPoints") as? Date
@@ -318,6 +325,9 @@
             } else if action == "switchLight" {
                 lightAction += 1
                 energy += 1
+            } else if action == "useBag" {
+                bagAction += 1
+                waste += 1
             }
             
             checkAndUpdateStreak()
@@ -327,6 +337,7 @@
         
         func resetActions() {
             bottleActions = 0
+            bagAction = 0
             recycleActions = 0
             transportAction = 0
             treeAction = 0
@@ -335,6 +346,7 @@
         
         func resetAll() {
             totalpoints = 0
+            bagAction = 0
             todaypoints = 0
             resetStreak()
             highStreak = 0
@@ -350,6 +362,8 @@
             dateOfNumQuests = nil
             numQuests = 0
             addPoints(0)
+            firstAwardUnlocked = false
+            
         }
 
         func incrementStreak() {
@@ -360,6 +374,7 @@
             streak = 0
         }
     }
+
 
     struct AwardPopupView: View {
         @Binding var isPresented: Bool
@@ -548,7 +563,7 @@
                         // Force Log Out Button
                         
                         // Reset All Button
-                        /*/
+                        
                         DevMenuButton(
                             title: "Reset All Data",
                             icon: "arrow.triangle.2.circlepath",
@@ -567,7 +582,7 @@
                                 }
                             }
                         )
-                        */
+                        
                         DevMenuButton(
                             title: "Reset Quests",
                             icon: "arrow.uturn.backward.circle",
@@ -1732,6 +1747,10 @@ struct SettingsView: View {
                                 .frame(maxWidth: .infinity)
                                 .background(Color.red.opacity(0.1))
                                 .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(ThemeColors.Content.border(isDarkMode), lineWidth: 2)
+                                )
                             }
                             .padding(.top, 20)
 
