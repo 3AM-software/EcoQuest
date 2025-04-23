@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import ConfettiSwiftUI
 
 func encodeImage(image: UIImage) -> String {
     // Convert UIImage to JPEG data
@@ -189,6 +190,8 @@ class GlobalState: ObservableObject {
     @Published var showErrorMessage: Bool = false
     @Published var counter: Int = 0
     
+    @Published var isLoggingOut = false
+    
     private init() {}
 }
 
@@ -214,7 +217,7 @@ struct NewQuestView: View {
             NewQuest(title: "Recycle items", currActions: userViewModel.recycleActions, maxActions: 5, icon: "arrow.3.trianglepath", iconColor: .purple, completionPrompt: "Does the image contain a recyclable item? Please answer using just 'yes' or 'no'.", actionPrompt: "recyclableItem"),
             NewQuest(title: "Take public transport", currActions: userViewModel.transportAction, maxActions: 1, icon: "bus", iconColor: .green, completionPrompt: "Does the image contain a form of public transport? Please answer using just 'yes' or 'no'.", actionPrompt: "publicTransport"),
             NewQuest(title: "Plant a tree", currActions: userViewModel.treeAction, maxActions: 1, icon: "tree", iconColor: .brown, completionPrompt: "Does the image contain a newly planted tree? Please answer using just 'yes' or 'no'.", actionPrompt: "plantTree"),
-            NewQuest(title: "Switch off unused lights", currActions: userViewModel.lightAction, maxActions: 4, icon: "lightbulb", iconColor: .yellow, completionPrompt: "Does the image show a light switch being turned off? Please answer using just 'yes' or 'no'.", actionPrompt: "switchLight")
+            NewQuest(title: "Switch off unused lights", currActions: userViewModel.lightAction, maxActions: 4, icon: "lightbulb", iconColor: .yellow, completionPrompt: "Does the image show a light that is turned off? Please answer using just 'yes' or 'no'.", actionPrompt: "switchLight")
         ])
         self.userViewModel = userViewModel
     }
@@ -240,9 +243,6 @@ struct NewQuestView: View {
             }
         }
     }
-    
-    // MARK: - Helper Methods
-    
     private func handleQuestSelection(_ quest: NewQuest) {
         if !quest.isCompleted {
             selectedQuest = quest
@@ -535,16 +535,16 @@ struct NewQuestView: View {
                         .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
                     
                     // Gold Progress Rectangle (slightly inset to show border)
+                    let inset: CGFloat = 6
+                    let rawWidth = CGFloat(progress) * geometry.size.width - inset
+                    let barWidth = max(rawWidth, 0)   // <-- prevents negative
+
                     RoundedRectangle(cornerRadius: 30)
-                        .fill(
-                            Color(red: 1.0, green: 0.8, blue: 0.267)
-                        )
-                        .frame(
-                            width: CGFloat(progress) * geometry.size.width - 6, // 2px narrower
-                            height: 20
-                        )
-                        .padding(.leading, 3) // Center the smaller width
-                        .padding(.vertical, 1) // Center vertically within background
+                      .fill(Color(red: 1, green: 0.8, blue: 0.267))
+                      .frame(width: barWidth, height: 20)
+                      .padding(.leading, inset/2)
+                      .padding(.vertical, 1)
+                    
                     
                     // Text Overlay
                     Text("\(currActions)/\(maxActions)")

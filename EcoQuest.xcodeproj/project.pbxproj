@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2E918F562DB866230052DB70 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 2E918F552DB866230052DB70 /* ConfettiSwiftUI */; };
 		CA2ACB102CC6BF5C00C97111 /* EcoQuestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB0F2CC6BF5C00C97111 /* EcoQuestApp.swift */; };
 		CA2ACB122CC6BF5C00C97111 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2ACB112CC6BF5C00C97111 /* ContentView.swift */; };
 		CA2ACB142CC6BF5E00C97111 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA2ACB132CC6BF5E00C97111 /* Assets.xcassets */; };
@@ -84,6 +85,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2E918F562DB866230052DB70 /* ConfettiSwiftUI in Frameworks */,
 				CA587BC82DB4611D00CF7715 /* FirebaseAnalytics in Frameworks */,
 				CA587BD12DB4751D00CF7715 /* FirebaseFirestore in Frameworks */,
 				CA587BCC2DB4611D00CF7715 /* FirebaseCore in Frameworks */,
@@ -206,6 +208,7 @@
 				CA587BC92DB4611D00CF7715 /* FirebaseAuth */,
 				CA587BCB2DB4611D00CF7715 /* FirebaseCore */,
 				CA587BD02DB4751D00CF7715 /* FirebaseFirestore */,
+				2E918F552DB866230052DB70 /* ConfettiSwiftUI */,
 			);
 			productName = EcoQuest;
 			productReference = CA2ACB0C2CC6BF5C00C97111 /* EcoQuest.app */;
@@ -281,6 +284,7 @@
 			mainGroup = CA2ACB032CC6BF5C00C97111;
 			packageReferences = (
 				CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				2E918F542DB863410052DB70 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
 			);
 			productRefGroup = CA2ACB0D2CC6BF5C00C97111 /* Products */;
 			projectDirPath = "";
@@ -506,7 +510,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"EcoQuest/Preview Content\"";
-				DEVELOPMENT_TEAM = 8S86J4WV4Y;
+				DEVELOPMENT_TEAM = YNKGXGK378;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EcoQuest/Info.plist;
@@ -546,7 +550,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"EcoQuest/Preview Content\"";
-				DEVELOPMENT_TEAM = 8S86J4WV4Y;
+				DEVELOPMENT_TEAM = YNKGXGK378;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EcoQuest/Info.plist;
@@ -692,6 +696,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		2E918F542DB863410052DB70 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/simibac/ConfettiSwiftUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.3;
+			};
+		};
 		CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -703,6 +715,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2E918F552DB866230052DB70 /* ConfettiSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2E918F542DB863410052DB70 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
+			productName = ConfettiSwiftUI;
+		};
 		CA587BC72DB4611D00CF7715 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CA587BC62DB4611D00CF7715 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

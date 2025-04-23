@@ -91,7 +91,7 @@ class LeaderboardViewModel: ObservableObject {
         } catch {
             print("Error getting documents: \(error)")
         }
-        await Task.sleep(3_000_000_000)
+        await Task.sleep(1_000_000_000)
         
         await MainActor.run {
                     self.isLoading = false
