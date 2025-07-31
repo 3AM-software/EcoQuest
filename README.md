@@ -101,7 +101,7 @@ open EcoQuest.xcworkspace
 ## Roadmap
 
 - [x] Add personal records and awards
-- [ ] Implement an account system
+- [x] Implement an account system
 - [ ] Expand community features (e.g., leaderboards)
     - [ ] Add friend features
 - [ ] UI enhancements
