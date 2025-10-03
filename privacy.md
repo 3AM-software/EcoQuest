@@ -21,3 +21,6 @@ Data Sharing
 We do not sell or share your personal information for advertising or tracking.
 
 We use trusted third-party services (e.g., Google Firebase) to provide authentication, analytics, and storage. See Google’s Privacy Policy here: https://policies.google.com/privacy
+
+Contact
+If you have questions, contact us at: [luojosh888@gmail.com].
